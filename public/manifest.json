@@ -1,0 +1,14 @@
+{
+  "name": "Decka",
+  "short_name": "Decka",
+  "background_color": "#ffffff",
+  "orientation": "portrait",
+  "theme_color": "#ffffff",
+  "display": "standalone",
+  "start_url": "/",
+  "icons": [{
+    "src": "/favicon.png",
+    "type": "image/png",
+    "sizes": "512x512"
+  }]
+}
