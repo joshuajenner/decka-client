@@ -1,5 +1,8 @@
 :root {
 	--main-green: #09382f;
+	--main-yellow: #ce9804;
+	--main-white: #f0eadb;
+	--off-white: #f5f5f5;
 }
 
 * {
@@ -14,6 +17,7 @@ body {
 }
 
 body {
+	background-color: var(--off-white);
 	font-family: "Roboto", sans-serif;
 	margin: 0;
 }
