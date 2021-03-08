@@ -7,8 +7,12 @@
 	let selectedDeck = {
 		title: "",
 	};
+	let anyListOpen = true;
+	let deckListOpen = true;
+	let cardListOpen = false;
+
 	let deckList = [];
-	let listOpen = true;
+	let cardList = [];
 
 	async function newDeck() {
 		const res = await fetch(`${$api}/newdeck`, {
@@ -35,116 +39,552 @@
 		console.log(allDecks);
 		deckList = allDecks;
 	}
-
+	async function getDeckData(deckID) {
+		const res = await fetch(`${$api}/getdeckdata`, {
+			method: "POST",
+			body: JSON.stringify({
+				uid: $currentUser.uid,
+				did: deckID,
+			}),
+			headers: {
+				"Content-Type": "application/json",
+			},
+		});
+		const allData = await res.json();
+		cardList = allData;
+	}
 	function selectDeck(id, name) {
 		selectedDeck = {
 			id: id,
 			title: name,
 		};
+		toggleDeckList();
+		cardListOpen = true;
+		getDeckData(id);
 	}
-	function toggleList() {
-		listOpen = !listOpen;
+	function toggleDeckList() {
+		deckListOpen = !deckListOpen;
+		checkListsOpen();
+	}
+	function toggleCardList() {
+		cardListOpen = !cardListOpen;
+		checkListsOpen();
+	}
+	function toggleAllLists() {
+		if (anyListOpen) {
+			deckListOpen = false;
+			cardListOpen = false;
+		} else {
+			deckListOpen = true;
+			cardListOpen = true;
+		}
+		anyListOpen = !anyListOpen;
+	}
+	function checkListsOpen() {
+		if (deckListOpen || cardListOpen) {
+			anyListOpen = true;
+		} else {
+			anyListOpen = false;
+		}
 	}
 	getDecks();
 </script>
 
-<nav class="sh">
-	{#key selectedDeck}
-		<div id="nav-deck" in:fly={{ y: 200, duration: 200 }}>
-			<h5>{selectedDeck.title}</h5>
+<svelte:head>
+	<title>Decka</title>
+</svelte:head>
+
+<main class="flex">
+	<nav class="sh">
+		<div id="nav-deck">
+			<div
+				id="nav-icon"
+				class={anyListOpen ? "nav-icon-open" : "nav-icon-close"}
+				on:click={toggleAllLists}
+			>
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					fill="none"
+					viewBox="0 0 24 24"
+					stroke="currentColor"
+				>
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M4 6h16M4 12h16M4 18h7"
+					/>
+				</svg>
+			</div>
+			{#key selectedDeck}
+				<div
+					id="deck-title"
+					in:fly={{ y: 200, duration: 200 }}
+					on:click={toggleDeckList}
+				>
+					<h5>{selectedDeck.title}</h5>
+				</div>
+				<div id="loader" class="center"><span /></div>
+			{/key}
 		</div>
-	{/key}
-</nav>
-<div id="decka">
-	<div id="deck-list" class="sh open">
-		<div id="all-decks">
-			{#if deckList == []}
-				<p>No decks to display.</p>
-			{:else}
-				{#each deckList as deckItem (deckItem.id)}
-					<div
-						id={deckItem.id}
-						class="deck-item"
-						on:click={selectDeck(deckItem.id, deckItem.data.title)}
+	</nav>
+	<div id="decka">
+		<div id="nav-side" class="flex">
+			<div id="tooltip-icon" class="nsi-icon">
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					fill="none"
+					viewBox="0 0 24 24"
+					stroke="slategrey"
+				>
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+					/>
+				</svg>
+			</div>
+			<div id="nav-side-icons">
+				<div
+					id="decks-icon"
+					class={deckListOpen ? "nsi-icon tt nso" : "nsi-icon tt nsc"}
+					on:click={toggleDeckList}
+				>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						fill="none"
+						viewBox="0 0 24 24"
+						stroke="currentColor"
 					>
-						<h6>{deckItem.data.title}</h6>
-						<!-- <p>{deckItem.data.content}</p> -->
-					</div>
-				{/each}
-			{/if}
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+						/>
+					</svg>
+				</div>
+				<div
+					id="cards-icon"
+					class={cardListOpen ? "nsi-icon tt nso" : "nsi-icon tt nsc"}
+					on:click={toggleCardList}
+				>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						fill="none"
+						viewBox="0 0 24 24"
+						stroke="currentColor"
+					>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+						/>
+					</svg>
+				</div>
+			</div>
 		</div>
-		<div id="list-button" on:click={toggleList}>
-			{#if listOpen}
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					viewBox="0 0 20 20"
-					fill="currentColor"
-				>
-					<path
-						fill-rule="evenodd"
-						d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-						clip-rule="evenodd"
-					/>
-				</svg>
-			{:else}
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					viewBox="0 0 20 20"
-					fill="currentColor"
-				>
-					<path
-						fill-rule="evenodd"
-						d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-						clip-rule="evenodd"
-					/>
-				</svg>
-			{/if}
+		<div id="deck-info" class={deckListOpen ? "open sh" : "close"}>
+			<div id="deck-list">
+				<div id="all-decks">
+					{#if deckList == []}
+						<p>No decks to display.</p>
+					{:else}
+						{#each deckList as deckItem (deckItem.id)}
+							<div
+								id={deckItem.id}
+								class="deck-item"
+								on:click={selectDeck(
+									deckItem.id,
+									deckItem.data.title
+								)}
+							>
+								<h6>{deckItem.data.title}</h6>
+								<!-- <p>{deckItem.data.content}</p> -->
+							</div>
+						{/each}
+					{/if}
+				</div>
+				<div id="new-deck">
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						fill="none"
+						viewBox="0 0 24 24"
+						stroke="slategrey"
+					>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
+						/>
+					</svg>
+					<p>new Deck</p>
+				</div>
+			</div>
+			<div id="card-list" class={cardListOpen ? "open sh" : "close"}>
+				<div id="card-list-menu">
+					<div class="card-menu-icon">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke="slategrey"
+						>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+							/>
+						</svg>
+					</div>
+					<div class="card-menu-icon">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke="slategrey"
+						>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
+							/>
+						</svg>
+					</div>
+				</div>
+				<div id="all-cards">
+					{#if cardList == []}
+						<p>No Cards to display.</p>
+					{:else}
+						{#each cardList as cardItem (cardItem.id)}
+							<div id={cardItem.id} class="card-item">
+								<div class="card-title">
+									<p class="lato">
+										{cardItem.data.title}
+									</p>
+								</div>
+								<div class="card-content">
+									{cardItem.data.content}
+								</div>
+							</div>
+						{/each}
+					{/if}
+				</div>
+			</div>
 		</div>
 	</div>
-</div>
+</main>
 
 <style>
+	main {
+		flex-direction: column;
+	}
 	nav {
 		color: var(--off-white);
 		width: 100%;
 		height: 60px;
 		background-color: var(--main-green);
-		border-bottom: 1px solid #252525;
-		padding: 0px 24px;
+		/* border-bottom: 1px solid #252525; */
 		overflow: hidden;
 	}
-	#nav-deck {
-		height: 60px;
+	#nav-icon {
 		display: flex;
+		width: 60px;
+		padding: 16px;
+		border-right: 1px solid #032720;
+	}
+	#nav-icon:hover svg {
+		stroke: #eda700;
+	}
+	.nav-icon-open svg {
+		stroke: #eda700;
+	}
+	.nav-icon-close svg {
+		stroke: var(--off-white);
+	}
+	#nav-deck {
+		display: flex;
+		height: 100%;
+	}
+	#deck-title {
+		display: flex;
+		width: 300px;
 		align-items: center;
+		padding-left: 24px;
+	}
+	#nav-side {
+		height: 100%;
+		position: relative;
+		z-index: 5;
+		width: 60px;
+		background-color: var(--off-white);
+		border-right: 1px solid lightgrey;
+		display: flex;
+		flex-direction: column-reverse;
+		justify-content: space-between;
+	}
+	.nsi-icon {
+		height: 60px;
+		width: 100%;
+		padding: 16px;
+		background-color: var(--off-white);
+	}
+	.nsc:hover svg {
+		stroke: #eda700;
+	}
+	.nso {
+		background-color: #eda700;
+	}
+	.nso svg {
+		stroke: var(--off-white);
+	}
+	.nsc svg {
+		stroke: black;
+	}
+	#tooltip-icon:hover ~ div .tt:after {
+		left: 100%;
+		transform: translate(20%, -50%);
+		opacity: 100%;
+	}
+	#tooltip-icon:hover svg {
+		stroke: black;
+	}
+	.tt {
+		position: relative;
+	}
+	#decks-icon:after {
+		content: "Decks";
+	}
+	#cards-icon:after {
+		content: "Cards";
+	}
+	#decks-icon:after,
+	#cards-icon:after {
+		line-height: 50px;
+		height: 48px;
+		width: 68px;
+		padding: 0px 12px;
+		position: absolute;
+		left: -110%;
+		top: 50%;
+		opacity: 0%;
+		background-color: rgba(0, 0, 0, 0.8);
+		color: white;
+		transform: translate(0px, -50%);
+		transition: left, transform 0.2s, opacity 0.2s;
+		border-radius: 8px;
+		z-index: -1;
 	}
 	#decka {
 		height: 100%;
 		position: relative;
 	}
 	#deck-list {
+		background-color: var(--less-white);
+	}
+	#deck-info {
+		z-index: 2;
+	}
+	#deck-info,
+	#card-list {
 		height: 100%;
 		position: absolute;
-	}
-	.open {
+		top: 0px;
 		width: 300px;
+		transition: left 0.15s;
+		background-color: var(--less-white);
+		border-right: 1px solid lightgrey;
 	}
-	.close {
-		width: 0px;
+	#card-list {
+		width: 340px !important;
+		z-index: -1 !important;
+		background-color: var(--less-white);
 	}
-	#list-button {
-		position: absolute;
-		right: 0px;
-		top: 50%;
-		transform: translate(100%, -50%);
-		height: 96px;
-		width: 48px;
-		padding: 8px;
-		display: flex;
-		align-items: center;
+	#deck-info.open {
+		left: 60px;
+	}
+	#deck-info.close {
+		left: -240px;
+	}
+	#card-list.open {
+		left: 300px;
+	}
+	#card-list.close {
+		left: -40px;
 	}
 	.deck-item {
-		padding: 16px 24px;
+		height: 60px;
+		padding: 0px 24px;
 		border-bottom: 1px solid lightgrey;
+		transition: padding 0.2s;
+	}
+	.deck-item:hover {
+		background-color: var(--hv-white);
+		padding: 0px 28px;
+	}
+	.deck-item h6 {
+		line-height: 60px;
+	}
+	#new-deck {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		padding: 16px;
+		height: 60px;
+		color: slategrey;
+	}
+	#new-deck svg {
+		height: 100%;
+		margin-right: 4px;
+	}
+	#new-deck:hover,
+	#new-deck:hover svg {
+		color: #eda700;
+		stroke: #eda700;
+	}
+	#card-list-menu {
+		width: 100%;
+		height: 60px;
+		background-color: var(--off-white);
+		border-bottom: 1px solid lightgrey;
+		display: flex;
+		justify-content: space-between;
+	}
+	.card-menu-icon {
+		width: 44px;
+		padding: 16px 8px;
+	}
+	.card-menu-icon svg {
+		height: 100%;
+	}
+	#all-cards {
+		padding: 8px;
+	}
+	.card-item {
+		border-radius: 12px;
+		border: 1px solid lightgrey;
+		padding: 8px 16px;
+		min-height: 240px;
+		background-color: var(--off-white);
+	}
+	.card-item:first-of-type {
+		margin-top: 24px;
+	}
+	.card-title {
+		font-weight: bold;
+		font-size: 1.25em;
+		margin-bottom: 16px;
+		padding: 8px 0px 16px 0px;
+		border-bottom: 1px solid lightgrey;
+	}
+	#loader {
+		display: block;
+		height: 32px;
+		width: 32px;
+		-webkit-animation: loader-2-1 3s linear infinite;
+		animation: loader-2-1 3s linear infinite;
+	}
+	@-webkit-keyframes loader-2-1 {
+		0% {
+			-webkit-transform: rotate(0deg);
+		}
+		100% {
+			-webkit-transform: rotate(360deg);
+		}
+	}
+	@keyframes loader-2-1 {
+		0% {
+			transform: rotate(0deg);
+		}
+		100% {
+			transform: rotate(360deg);
+		}
+	}
+	#loader {
+		display: none;
+	}
+	#loader span {
+		display: block;
+		position: absolute;
+		top: 0;
+		left: 0;
+		bottom: 0;
+		right: 0;
+		margin: auto;
+		height: 32px;
+		width: 32px;
+		clip: rect(16px, 32px, 32px, 0);
+		-webkit-animation: loader-2-2 1.5s cubic-bezier(0.77, 0, 0.175, 1)
+			infinite;
+		animation: loader-2-2 1.5s cubic-bezier(0.77, 0, 0.175, 1) infinite;
+	}
+	@-webkit-keyframes loader-2-2 {
+		0% {
+			-webkit-transform: rotate(0deg);
+		}
+		100% {
+			-webkit-transform: rotate(360deg);
+		}
+	}
+	@keyframes loader-2-2 {
+		0% {
+			transform: rotate(0deg);
+		}
+		100% {
+			transform: rotate(360deg);
+		}
+	}
+	#loader span::before {
+		content: "";
+		display: block;
+		position: absolute;
+		top: 0;
+		left: 0;
+		bottom: 0;
+		right: 0;
+		margin: auto;
+		height: 32px;
+		width: 32px;
+		border: 3px solid transparent;
+		border-top: 3px solid #fff;
+		border-radius: 50%;
+		-webkit-animation: loader-2-3 1.5s cubic-bezier(0.77, 0, 0.175, 1)
+			infinite;
+		animation: loader-2-3 1.5s cubic-bezier(0.77, 0, 0.175, 1) infinite;
+	}
+	@-webkit-keyframes loader-2-3 {
+		0% {
+			-webkit-transform: rotate(0deg);
+		}
+		100% {
+			-webkit-transform: rotate(360deg);
+		}
+	}
+	@keyframes loader-2-3 {
+		0% {
+			transform: rotate(0deg);
+		}
+		100% {
+			transform: rotate(360deg);
+		}
+	}
+	#loader span::after {
+		content: "";
+		display: block;
+		position: absolute;
+		top: 0;
+		left: 0;
+		bottom: 0;
+		right: 0;
+		margin: auto;
+		height: 32px;
+		width: 32px;
+		border: 3px solid rgba(255, 255, 255, 0.5);
+		border-radius: 50%;
 	}
 </style>

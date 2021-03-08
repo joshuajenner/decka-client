@@ -14,15 +14,14 @@
 	db.set(firebase.firestore());
 </script>
 
-<main>
-	{#if !$currentUser.loggedIn}
-		<Auth />
-	{:else}
-		<Main />
-	{/if}
-</main>
+{#if !$currentUser.loggedIn}
+	<Auth />
+{:else}
+	<Main />
+{/if}
 
 <style>
 	@import url("https://fonts.googleapis.com/css2?family=Roboto&display=swap");
 	@import url("https://fonts.googleapis.com/css2?family=Recursive&display=swap");
+	@import url("https://fonts.googleapis.com/css2?family=Lato&display=swap");
 </style>

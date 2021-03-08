@@ -141,7 +141,7 @@
   <title>Welcome to Decka</title>
 </svelte:head>
 
-<div id="auth" class="flex">
+<main id="auth" class="flex">
   <div id="form-container">
     <form id={current === 'login' ? 'selected' : ''}>
       <div class="flex form-box">
@@ -198,4 +198,4 @@
   <div id="hero-image">
     <img src="/decka-black.png" alt="Decka Logo" />
   </div>
-</div>
+</main>
