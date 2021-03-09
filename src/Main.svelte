@@ -2,14 +2,18 @@
 	import { currentUser } from "./store.js";
 	import { api } from "./store.js";
 
+	import NewCardModal from "./components/NewCardModal.svelte";
+
 	import { fly } from "svelte/transition";
 
 	let selectedDeck = {
 		title: "",
+		id: "",
 	};
 	let anyListOpen = true;
 	let deckListOpen = true;
 	let cardListOpen = false;
+	let newCardModalOpen = false;
 
 	let deckList = [];
 	let cardList = [];
@@ -87,6 +91,9 @@
 			anyListOpen = false;
 		}
 	}
+	function openNewCardModal() {
+		newCardModalOpen = true;
+	}
 	getDecks();
 </script>
 
@@ -123,6 +130,23 @@
 					on:click={toggleDeckList}
 				>
 					<h5>{selectedDeck.title}</h5>
+					{#if selectedDeck.title != ""}
+						<div id="nav-arrow">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke="currentColor"
+							>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M13 5l7 7-7 7M5 5l7 7-7 7"
+								/>
+							</svg>
+						</div>
+					{/if}
 				</div>
 				<div id="loader" class="center"><span /></div>
 			{/key}
@@ -196,10 +220,7 @@
 							<div
 								id={deckItem.id}
 								class="deck-item"
-								on:click={selectDeck(
-									deckItem.id,
-									deckItem.data.title
-								)}
+								on:click={selectDeck(deckItem.id, deckItem.data.title)}
 							>
 								<h6>{deckItem.data.title}</h6>
 								<!-- <p>{deckItem.data.content}</p> -->
@@ -241,7 +262,7 @@
 							/>
 						</svg>
 					</div>
-					<div class="card-menu-icon">
+					<div class="card-menu-icon" on:click={openNewCardModal}>
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							fill="none"
@@ -259,17 +280,17 @@
 				</div>
 				<div id="all-cards">
 					{#if cardList == []}
-						<p>No Cards to display.</p>
+						<p class="lato">No Cards to display.</p>
 					{:else}
 						{#each cardList as cardItem (cardItem.id)}
-							<div id={cardItem.id} class="card-item">
+							<div id={cardItem.id} class="card-item card-sh">
 								<div class="card-title">
 									<p class="lato">
 										{cardItem.data.title}
 									</p>
 								</div>
 								<div class="card-content">
-									{cardItem.data.content}
+									<p>{cardItem.data.content}</p>
 								</div>
 							</div>
 						{/each}
@@ -278,6 +299,7 @@
 			</div>
 		</div>
 	</div>
+	<NewCardModal bind:isOpen={newCardModalOpen} bind:deck={selectedDeck.id} />
 </main>
 
 <style>
@@ -316,6 +338,13 @@
 		width: 300px;
 		align-items: center;
 		padding-left: 24px;
+		justify-content: space-between;
+	}
+	#nav-arrow {
+		height: 100%;
+		padding: 14px 16px 18px 16px;
+		width: 60px;
+		margin-right: -30px;
 	}
 	#nav-side {
 		height: 100%;
@@ -385,6 +414,7 @@
 		position: relative;
 	}
 	#deck-list {
+		height: 100%;
 		background-color: var(--less-white);
 	}
 	#deck-info {
@@ -404,6 +434,9 @@
 		width: 340px !important;
 		z-index: -1 !important;
 		background-color: var(--less-white);
+		height: 100%;
+		display: flex;
+		flex-direction: column;
 	}
 	#deck-info.open {
 		left: 60px;
@@ -462,8 +495,13 @@
 	.card-menu-icon svg {
 		height: 100%;
 	}
+	.card-menu-icon:hover svg {
+		stroke: black;
+	}
 	#all-cards {
 		padding: 8px;
+		overflow-y: scroll;
+		height: 100%;
 	}
 	.card-item {
 		border-radius: 12px;
@@ -471,17 +509,34 @@
 		padding: 8px 16px;
 		min-height: 240px;
 		background-color: var(--off-white);
+		margin-top: -180px;
+		position: relative;
+		transition: margin 0.2s;
+	}
+	.card-sh {
+		box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px,
+			rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;
 	}
 	.card-item:first-of-type {
 		margin-top: 24px;
+	}
+	.card-item:first-of-type:hover {
+		margin-top: 0px;
+		margin-bottom: 24px;
+	}
+	.card-item:hover {
+		margin-top: -204px;
+		margin-bottom: 24px;
+		border-color: black;
 	}
 	.card-title {
 		font-weight: bold;
 		font-size: 1.25em;
 		margin-bottom: 16px;
-		padding: 8px 0px 16px 0px;
+		padding: 8px 0px 4px 0px;
 		border-bottom: 1px solid lightgrey;
 	}
+
 	#loader {
 		display: block;
 		height: 32px;
@@ -519,8 +574,7 @@
 		height: 32px;
 		width: 32px;
 		clip: rect(16px, 32px, 32px, 0);
-		-webkit-animation: loader-2-2 1.5s cubic-bezier(0.77, 0, 0.175, 1)
-			infinite;
+		-webkit-animation: loader-2-2 1.5s cubic-bezier(0.77, 0, 0.175, 1) infinite;
 		animation: loader-2-2 1.5s cubic-bezier(0.77, 0, 0.175, 1) infinite;
 	}
 	@-webkit-keyframes loader-2-2 {
@@ -553,8 +607,7 @@
 		border: 3px solid transparent;
 		border-top: 3px solid #fff;
 		border-radius: 50%;
-		-webkit-animation: loader-2-3 1.5s cubic-bezier(0.77, 0, 0.175, 1)
-			infinite;
+		-webkit-animation: loader-2-3 1.5s cubic-bezier(0.77, 0, 0.175, 1) infinite;
 		animation: loader-2-3 1.5s cubic-bezier(0.77, 0, 0.175, 1) infinite;
 	}
 	@-webkit-keyframes loader-2-3 {
