@@ -27,6 +27,7 @@
 </script>
 
 <div id="new-card-box" class={isOpen ? "open" : "close"}>
+	<div id="blackout" on:click={setClose} />
 	<div id="new-card-modal">
 		<form method="post" on:submit|preventDefault={newCard}>
 			<label for="title">Title</label>
@@ -61,15 +62,22 @@
 		left: 0px;
 		height: 100%;
 		width: 100%;
+	}
+	#blackout {
+		position: absolute;
+		top: 0px;
+		left: 0px;
+		height: 100%;
+		width: 100%;
 		background-color: rgba(0, 0, 0, 0.6);
 	}
 	#new-card-modal {
 		position: relative;
-		height: 40%;
-		width: 60%;
+		width: 40%;
 		background-color: var(--off-white);
 		border-radius: 16px;
-		padding: 32px 64px;
+		padding: 64px;
+		z-index: 1;
 	}
 	#close-box:hover svg {
 		stroke: black;
