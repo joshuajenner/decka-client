@@ -3,41 +3,34 @@
 	import { api } from "../store.js";
 
 	export let isOpen = false;
-	export let deck = "";
-	let formTitle;
-	let formContent;
+
+	let formTitle = "";
 
 	function setClose() {
 		isOpen = false;
-		formTitle = "";
-		formContent = "";
 	}
-	async function newCard() {
-		const res = await fetch(`${$api}/newcard`, {
+
+	async function newDeck() {
+		const res = await fetch(`${$api}/newdeck`, {
 			method: "POST",
 			body: JSON.stringify({
 				uid: $currentUser.uid,
-				did: deck,
 				title: formTitle,
-				content: formContent,
 			}),
 			headers: {
 				"Content-Type": "application/json",
 			},
 		});
-		console.log("yuh");
 		isOpen = false;
 	}
 </script>
 
-<div id="new-card-box" class={isOpen ? "open" : "close"}>
+<div id="new-deck-box" class={isOpen ? " box open" : "close"}>
 	<div id="blackout" on:click={setClose} />
-	<div id="new-card-modal">
-		<form method="post" on:submit|preventDefault={newCard}>
+	<div id="new-deck-modal" class="modal">
+		<form method="post" on:submit|preventDefault={newDeck}>
 			<label for="title">Title</label>
 			<input name="title" type="text" bind:value={formTitle} />
-			<label for="content">Content</label>
-			<input name="content" type="text" bind:value={formContent} />
 			<button type="submit">Submit</button>
 		</form>
 		<div id="close-box" on:click={setClose}>
@@ -59,13 +52,21 @@
 </div>
 
 <style>
-	#new-card-box {
+	.box {
 		z-index: 10;
 		position: absolute;
 		top: 0px;
 		left: 0px;
 		height: 100%;
 		width: 100%;
+	}
+	.modal {
+		position: relative;
+		width: 40%;
+		background-color: var(--off-white);
+		border-radius: 16px;
+		padding: 64px;
+		z-index: 1;
 	}
 	#blackout {
 		position: absolute;
@@ -74,14 +75,6 @@
 		height: 100%;
 		width: 100%;
 		background-color: rgba(0, 0, 0, 0.6);
-	}
-	#new-card-modal {
-		position: relative;
-		width: 40%;
-		background-color: var(--off-white);
-		border-radius: 16px;
-		padding: 64px;
-		z-index: 1;
 	}
 	#close-box:hover svg {
 		stroke: black;

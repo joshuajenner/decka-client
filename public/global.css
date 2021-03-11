@@ -8,6 +8,8 @@
 	--off-white: #fcfcfc;
 	--less-white: #f5f5f5;
 	--hv-white: #eeeeee;
+	--main-red: #881327;
+	--hv-red: #74091b;
 }
 
 *,
@@ -86,10 +88,16 @@ small,
 	font-size: 0.8rem;
 }
 
+.p {
+	cursor: pointer;
+}
 .flex {
 	display: flex;
 }
 
 .sh {
 	box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px;
+}
+button {
+	cursor: pointer;
 }

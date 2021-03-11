@@ -3,43 +3,65 @@
 	import { api } from "../store.js";
 
 	export let isOpen = false;
-	export let deck = "";
-	let formTitle;
-	let formContent;
+	// id, title, content
+	export let deck = {};
+
+	let formTitle = deck.title;
+	let confirm = "";
 
 	function setClose() {
 		isOpen = false;
-		formTitle = "";
-		formContent = "";
 	}
-	async function newCard() {
-		const res = await fetch(`${$api}/newcard`, {
+
+	async function updateDeck() {
+		const res = await fetch(`${$api}/updatedeck`, {
 			method: "POST",
 			body: JSON.stringify({
 				uid: $currentUser.uid,
-				did: deck,
+				did: deck.id,
 				title: formTitle,
-				content: formContent,
 			}),
 			headers: {
 				"Content-Type": "application/json",
 			},
 		});
-		console.log("yuh");
 		isOpen = false;
+	}
+
+	async function deleteDeck() {
+		if (confirm === deck.title) {
+			console.log("reached");
+			const res = await fetch(`${$api}/deletedeck`, {
+				method: "POST",
+				body: JSON.stringify({
+					uid: $currentUser.uid,
+					did: deck.id,
+				}),
+				headers: {
+					"Content-Type": "application/json",
+				},
+			});
+			isOpen = false;
+		}
 	}
 </script>
 
-<div id="new-card-box" class={isOpen ? "open" : "close"}>
+<div id="update-deck-box" class={isOpen ? " box open" : "close"}>
 	<div id="blackout" on:click={setClose} />
-	<div id="new-card-modal">
-		<form method="post" on:submit|preventDefault={newCard}>
-			<label for="title">Title</label>
+	<div id="update-deck-modal" class="modal">
+		<h6>{deck.title}</h6>
+		<form method="post" on:submit|preventDefault={updateDeck}>
+			<label for="title">Rename</label>
 			<input name="title" type="text" bind:value={formTitle} />
-			<label for="content">Content</label>
-			<input name="content" type="text" bind:value={formContent} />
 			<button type="submit">Submit</button>
 		</form>
+		<label for="delete-confirm"
+			>Please type in the name of the deck to confirm deletion.</label
+		>
+		<input name="delete-confirm" type="text" bind:value={confirm} />
+		<button class="button-delete" type="button" on:click={deleteDeck}
+			>Delete</button
+		>
 		<div id="close-box" on:click={setClose}>
 			<svg
 				xmlns="http://www.w3.org/2000/svg"
@@ -59,13 +81,21 @@
 </div>
 
 <style>
-	#new-card-box {
+	.box {
 		z-index: 10;
 		position: absolute;
 		top: 0px;
 		left: 0px;
 		height: 100%;
 		width: 100%;
+	}
+	.modal {
+		position: relative;
+		width: 40%;
+		background-color: var(--off-white);
+		border-radius: 16px;
+		padding: 64px;
+		z-index: 1;
 	}
 	#blackout {
 		position: absolute;
@@ -74,14 +104,6 @@
 		height: 100%;
 		width: 100%;
 		background-color: rgba(0, 0, 0, 0.6);
-	}
-	#new-card-modal {
-		position: relative;
-		width: 40%;
-		background-color: var(--off-white);
-		border-radius: 16px;
-		padding: 64px;
-		z-index: 1;
 	}
 	#close-box:hover svg {
 		stroke: black;
@@ -126,5 +148,11 @@
 	}
 	button:hover {
 		background-color: var(--hv-green);
+	}
+	.button-delete {
+		background-color: var(--main-red);
+	}
+	.button-delete:hover {
+		background-color: var(--hv-red);
 	}
 </style>

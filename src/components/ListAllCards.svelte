@@ -1,7 +1,16 @@
 <script>
+	export let isOpen = false;
+	export let cards = [];
+	export let newCardModalToggle = false;
+
+	import { fly } from "svelte/transition";
+
+	function openNewCardModal() {
+		newCardModalToggle = true;
+	}
 </script>
 
-<div id="card-list" class={cardListOpen ? "open sh" : "close"}>
+<div id="card-list" class={isOpen ? "open sh" : "close"}>
 	<div id="card-list-menu">
 		<div class="card-menu-icon">
 			<svg
@@ -35,18 +44,22 @@
 		</div>
 	</div>
 	<div id="all-cards">
-		{#if cardList == []}
+		{#if cards == []}
 			<p class="lato">No Cards to display.</p>
 		{:else}
-			{#each cardList as cardItem (cardItem.id)}
-				<div id={cardItem.id} class="card-item card-sh">
+			{#each cards as card (card.id)}
+				<div
+					id={card.id}
+					class="card- card-sh"
+					in:fly={{ y: -33, duration: 200 }}
+				>
 					<div class="card-title">
 						<p class="lato">
-							{cardItem.data.title}
+							{card.data.title}
 						</p>
 					</div>
 					<div class="card-content">
-						<p>{cardItem.data.content}</p>
+						<p>{card.data.content}</p>
 					</div>
 				</div>
 			{/each}
@@ -56,6 +69,11 @@
 
 <style>
 	#card-list {
+		position: absolute;
+		top: 0px;
+		transition: left 0.15s;
+		background-color: var(--less-white);
+		border-right: 1px solid lightgrey;
 		width: 340px !important;
 		z-index: -1 !important;
 		background-color: var(--less-white);
@@ -92,7 +110,7 @@
 		overflow-y: scroll;
 		height: 100%;
 	}
-	.card-item {
+	.card- {
 		border-radius: 12px;
 		border: 1px solid lightgrey;
 		padding: 8px 16px;
@@ -106,21 +124,20 @@
 		box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px,
 			rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;
 	}
-	.card-item:first-of-type {
+	.card-:first-of-type {
 		margin-top: 24px;
 	}
-	.card-item:first-of-type:hover {
+	.card-:first-of-type:hover {
 		margin-top: 0px;
 		margin-bottom: 24px;
 	}
-	.card-item:hover {
+	.card-:hover {
 		margin-top: -204px;
 		margin-bottom: 24px;
 		border-color: black;
 	}
 	.card-title {
 		font-weight: bold;
-		font-size: 1.25em;
 		margin-bottom: 16px;
 		padding: 8px 0px 4px 0px;
 		border-bottom: 1px solid lightgrey;
