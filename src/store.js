@@ -14,3 +14,4 @@ export const api = readable("http://127.0.0.1:3000")
 export const fb = writable();
 export const db = writable();
 export const decks = writable([]);
+export const updateCards = writable([]);

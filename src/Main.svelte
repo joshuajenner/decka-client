@@ -6,12 +6,14 @@
 	import UpdateDeckModal from "./components/UpdateDeckModal.svelte";
 	import NewDeckModal from "./components/NewDeckModal.svelte";
 
+	import UpdateCardModal from "./components/UpdateCardModal.svelte";
 	import NewCardModal from "./components/NewCardModal.svelte";
 	import ListAllCards from "./components/ListAllCards.svelte";
 
 	import { fly } from "svelte/transition";
 
 	let selectedDeck = {
+		arr: 0,
 		title: "",
 		id: "",
 	};
@@ -23,24 +25,14 @@
 	let anyListOpen = true;
 	let deckListOpen = true;
 	let cardListOpen = false;
+
 	let newCardModalOpen = false;
+
 	let updateDeckModalOpen = false;
 	let newDeckModalOpen = false;
 
 	let deckList = [];
-	let cardList = [];
 
-	async function newDeck() {
-		const res = await fetch(`${$api}/newdeck`, {
-			method: "POST",
-			body: JSON.stringify({
-				uid: $currentUser.uid,
-			}),
-			headers: {
-				"Content-Type": "application/json",
-			},
-		});
-	}
 	async function getDecks() {
 		const res = await fetch(`${$api}/getdecks`, {
 			method: "POST",
@@ -53,10 +45,10 @@
 		});
 		const allDecks = await res.json();
 		console.log(allDecks);
-		deckList = allDecks;
+		$decks = allDecks;
 	}
-	async function getDeckData(deckID) {
-		const res = await fetch(`${$api}/getdeckdata`, {
+	async function getDeckBoards(deckID) {
+		const res = await fetch(`${$api}/getdeckboards`, {
 			method: "POST",
 			body: JSON.stringify({
 				uid: $currentUser.uid,
@@ -67,16 +59,34 @@
 			},
 		});
 		const allData = await res.json();
-		cardList = allData;
+		$decks[$decks.findIndex((deck) => deck.id === deckID)].boards = allData;
+		decks.set($decks);
+	}
+	async function getDeckCards(deckID) {
+		const res = await fetch(`${$api}/getdeckcards`, {
+			method: "POST",
+			body: JSON.stringify({
+				uid: $currentUser.uid,
+				did: deckID,
+			}),
+			headers: {
+				"Content-Type": "application/json",
+			},
+		});
+		const allData = await res.json();
+		$decks[$decks.findIndex((deck) => deck.id === deckID)].cards = allData;
+		console.log($decks);
 	}
 	function selectDeck(id, name) {
 		selectedDeck = {
+			arr: $decks.findIndex((deck) => deck.id === id),
 			id: id,
 			title: name,
 		};
 		toggleDeckList();
 		cardListOpen = true;
-		getDeckData(id);
+		getDeckCards(id);
+		getDeckBoards(id);
 	}
 	function toggleDeckList() {
 		deckListOpen = !deckListOpen;
@@ -127,64 +137,41 @@
 <main>
 	<nav class="sh">
 		<div id="nav-deck">
-			<div
-				id="nav-icon"
-				class={anyListOpen ? "nav-icon-open" : "nav-icon-close"}
-				on:click={toggleAllLists}
-			>
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					fill="none"
-					viewBox="0 0 24 24"
-					stroke="currentColor"
-				>
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M4 6h16M4 12h16M4 18h7"
-					/>
+			<div id="nav-icon" class={anyListOpen ? "nav-icon-open" : "nav-icon-close"} on:click={toggleAllLists}>
+				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
 				</svg>
 			</div>
 			{#key selectedDeck}
-				<div
-					id="deck-title"
-					class="p"
-					in:fly={{ y: 200, duration: 200 }}
-					on:click={toggleDeckList}
-				>
+				<div id="deck-title" class="p" in:fly={{ y: 200, duration: 200 }} on:click={toggleDeckList}>
 					<h5>{selectedDeck.title}</h5>
 					{#if selectedDeck.title != ""}
 						<div id="nav-arrow">
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								fill="none"
-								viewBox="0 0 24 24"
-								stroke="currentColor"
-							>
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-									d="M13 5l7 7-7 7M5 5l7 7-7 7"
-								/>
+							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
 							</svg>
 						</div>
 					{/if}
 				</div>
-				<div id="loader" class="center"><span /></div>
+				<div id="loader" class="center none"><span /></div>
 			{/key}
+		</div>
+		<div id="nav-boards">
+			{#if selectedDeck.id == ""}
+				<p>No Boards</p>
+			{:else}
+				<ul>
+					{#each $decks[selectedDeck.arr].boards as board}
+						<li>{board.title}</li>
+					{/each}
+				</ul>
+			{/if}
 		</div>
 	</nav>
 	<div id="decka">
 		<div id="nav-side" class="flex">
 			<div id="tooltip-icon" class="nsi-icon">
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					fill="none"
-					viewBox="0 0 24 24"
-					stroke="slategrey"
-				>
+				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="slategrey">
 					<path
 						stroke-linecap="round"
 						stroke-linejoin="round"
@@ -194,36 +181,13 @@
 				</svg>
 			</div>
 			<div id="nav-side-icons">
-				<div
-					id="decks-icon"
-					class={deckListOpen ? "nsi-icon tt nso" : "nsi-icon tt nsc"}
-					on:click={toggleDeckList}
-				>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						fill="none"
-						viewBox="0 0 24 24"
-						stroke="currentColor"
-					>
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-						/>
+				<div id="decks-icon" class={deckListOpen ? "nsi-icon tt nso" : "nsi-icon tt nsc"} on:click={toggleDeckList}>
+					<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
 					</svg>
 				</div>
-				<div
-					id="cards-icon"
-					class={cardListOpen ? "nsi-icon tt nso" : "nsi-icon tt nsc"}
-					on:click={toggleCardList}
-				>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						fill="none"
-						viewBox="0 0 24 24"
-						stroke="currentColor"
-					>
+				<div id="cards-icon" class={cardListOpen ? "nsi-icon tt nso" : "nsi-icon tt nsc"} on:click={toggleCardList}>
+					<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 						<path
 							stroke-linecap="round"
 							stroke-linejoin="round"
@@ -234,76 +198,52 @@
 				</div>
 			</div>
 		</div>
-		<div id="deck-info" class={deckListOpen ? "open sh" : "close"}>
-			<div id="deck-list">
-				<div id="all-decks">
-					{#if deckList == []}
-						<p>No decks to display.</p>
-					{:else}
-						{#each deckList as deckItem (deckItem.id)}
-							<div id={deckItem.id} class="deck-item p">
-								<h6 on:click={selectDeck(deckItem.id, deckItem.data.title)}>
-									{deckItem.data.title}
-								</h6>
-								<!-- <p>{deckItem.data.content}</p> -->
-								<div
-									class="deck-cog"
-									on:click={openUpdateDeckModal(
-										deckItem.id,
-										deckItem.data.title
-									)}
-								>
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										fill="none"
-										viewBox="0 0 24 24"
-										stroke="lightgrey"
-									>
-										<path
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											stroke-width="2"
-											d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-										/>
-										<path
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											stroke-width="2"
-											d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-										/>
-									</svg>
+		<div id="deck-info" class={deckListOpen ? "open" : "close"}>
+			<div id="all-lists" class="sh">
+				<div id="deck-list">
+					<div id="all-decks">
+						{#if deckList == []}
+							<p>No decks to display.</p>
+						{:else}
+							{#each $decks as deckItem (deckItem.id)}
+								<div id={deckItem.id} class="deck-item p">
+									<h6 on:click={selectDeck(deckItem.id, deckItem.data.title)}>
+										{deckItem.data.title}
+									</h6>
+									<!-- <p>{deckItem.data.content}</p> -->
+									<div class="deck-cog" on:click={openUpdateDeckModal(deckItem.id, deckItem.data.title)}>
+										<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="lightgrey">
+											<path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												stroke-width="2"
+												d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+											/>
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+										</svg>
+									</div>
 								</div>
-							</div>
-						{/each}
-					{/if}
+							{/each}
+						{/if}
+					</div>
+					<div id="new-deck" class="p" on:click={openNewDeckModal}>
+						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="slategrey">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+						</svg>
+						<p>new Deck</p>
+					</div>
 				</div>
-				<div id="new-deck" class="p" on:click={openNewDeckModal}>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						fill="none"
-						viewBox="0 0 24 24"
-						stroke="slategrey"
-					>
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
-						/>
-					</svg>
-					<p>new Deck</p>
-				</div>
+				{#if selectedDeck.id != ""}
+					<ListAllCards bind:isOpen={cardListOpen} bind:arr={selectedDeck.arr} bind:newCardModalToggle={newCardModalOpen} />
+				{/if}
 			</div>
-			<ListAllCards
-				bind:isOpen={cardListOpen}
-				bind:cards={cardList}
-				bind:newCardModalToggle={newCardModalOpen}
-			/>
+			<UpdateCardModal />
 		</div>
 	</div>
+	<NewCardModal bind:isOpen={newCardModalOpen} bind:deck={selectedDeck.id} />
+
 	<UpdateDeckModal bind:isOpen={updateDeckModalOpen} bind:deck={modalDeck} />
 	<NewDeckModal bind:isOpen={newDeckModalOpen} />
-	<NewCardModal bind:isOpen={newCardModalOpen} bind:deck={selectedDeck.id} />
 </main>
 
 <style>
@@ -324,6 +264,7 @@
 		width: 60px;
 		padding: 16px;
 		border-right: 1px solid #032720;
+		cursor: pointer;
 	}
 	#nav-icon:hover svg {
 		stroke: #eda700;
@@ -420,21 +361,26 @@
 		height: 100%;
 		position: relative;
 	}
+	#all-lists {
+		display: flex;
+	}
 	#deck-list {
 		height: 100%;
+		width: 300px;
+		border-right: 1px solid lightgrey;
 		background-color: var(--less-white);
+		z-index: 2;
 	}
 	#deck-info {
 		z-index: 2;
 	}
 	#deck-info {
+		display: flex;
 		height: 100%;
 		position: absolute;
 		top: 0px;
-		width: 300px;
 		transition: left 0.15s;
 		background-color: var(--less-white);
-		border-right: 1px solid lightgrey;
 	}
 
 	#deck-info.open {
@@ -487,109 +433,5 @@
 	#new-deck:hover svg {
 		color: #eda700;
 		stroke: #eda700;
-	}
-
-	#loader {
-		display: block;
-		height: 32px;
-		width: 32px;
-		-webkit-animation: loader-2-1 3s linear infinite;
-		animation: loader-2-1 3s linear infinite;
-	}
-	@-webkit-keyframes loader-2-1 {
-		0% {
-			-webkit-transform: rotate(0deg);
-		}
-		100% {
-			-webkit-transform: rotate(360deg);
-		}
-	}
-	@keyframes loader-2-1 {
-		0% {
-			transform: rotate(0deg);
-		}
-		100% {
-			transform: rotate(360deg);
-		}
-	}
-	#loader {
-		display: none;
-	}
-	#loader span {
-		display: block;
-		position: absolute;
-		top: 0;
-		left: 0;
-		bottom: 0;
-		right: 0;
-		margin: auto;
-		height: 32px;
-		width: 32px;
-		clip: rect(16px, 32px, 32px, 0);
-		-webkit-animation: loader-2-2 1.5s cubic-bezier(0.77, 0, 0.175, 1) infinite;
-		animation: loader-2-2 1.5s cubic-bezier(0.77, 0, 0.175, 1) infinite;
-	}
-	@-webkit-keyframes loader-2-2 {
-		0% {
-			-webkit-transform: rotate(0deg);
-		}
-		100% {
-			-webkit-transform: rotate(360deg);
-		}
-	}
-	@keyframes loader-2-2 {
-		0% {
-			transform: rotate(0deg);
-		}
-		100% {
-			transform: rotate(360deg);
-		}
-	}
-	#loader span::before {
-		content: "";
-		display: block;
-		position: absolute;
-		top: 0;
-		left: 0;
-		bottom: 0;
-		right: 0;
-		margin: auto;
-		height: 32px;
-		width: 32px;
-		border: 3px solid transparent;
-		border-top: 3px solid #fff;
-		border-radius: 50%;
-		-webkit-animation: loader-2-3 1.5s cubic-bezier(0.77, 0, 0.175, 1) infinite;
-		animation: loader-2-3 1.5s cubic-bezier(0.77, 0, 0.175, 1) infinite;
-	}
-	@-webkit-keyframes loader-2-3 {
-		0% {
-			-webkit-transform: rotate(0deg);
-		}
-		100% {
-			-webkit-transform: rotate(360deg);
-		}
-	}
-	@keyframes loader-2-3 {
-		0% {
-			transform: rotate(0deg);
-		}
-		100% {
-			transform: rotate(360deg);
-		}
-	}
-	#loader span::after {
-		content: "";
-		display: block;
-		position: absolute;
-		top: 0;
-		left: 0;
-		bottom: 0;
-		right: 0;
-		margin: auto;
-		height: 32px;
-		width: 32px;
-		border: 3px solid rgba(255, 255, 255, 0.5);
-		border-radius: 50%;
 	}
 </style>

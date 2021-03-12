@@ -55,26 +55,12 @@
 			<input name="title" type="text" bind:value={formTitle} />
 			<button type="submit">Submit</button>
 		</form>
-		<label for="delete-confirm"
-			>Please type in the name of the deck to confirm deletion.</label
-		>
+		<label for="delete-confirm">Please type in the name of the deck to confirm deletion.</label>
 		<input name="delete-confirm" type="text" bind:value={confirm} />
-		<button class="button-delete" type="button" on:click={deleteDeck}
-			>Delete</button
-		>
+		<button class="button-delete" type="button" on:click={deleteDeck}>Delete</button>
 		<div id="close-box" on:click={setClose}>
-			<svg
-				xmlns="http://www.w3.org/2000/svg"
-				fill="none"
-				viewBox="0 0 24 24"
-				stroke="slategrey"
-			>
-				<path
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					stroke-width="2"
-					d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-				/>
+			<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="slategrey">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
 			</svg>
 		</div>
 	</div>
@@ -148,11 +134,5 @@
 	}
 	button:hover {
 		background-color: var(--hv-green);
-	}
-	.button-delete {
-		background-color: var(--main-red);
-	}
-	.button-delete:hover {
-		background-color: var(--hv-red);
 	}
 </style>
