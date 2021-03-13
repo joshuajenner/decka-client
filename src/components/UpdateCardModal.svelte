@@ -3,6 +3,8 @@
 	import { api } from "../store.js";
 	import { updateCards } from "../store.js";
 
+	import { clickOutside } from "../functions/clickOutside.js";
+
 	async function updateCard(did, id, title, content) {
 		const res = await fetch(`${$api}/updatecard`, {
 			method: "POST",
@@ -42,12 +44,16 @@
 		);
 		updateCards.set($updateCards);
 	}
+
+	function closeAllCards() {
+		updateCards.set([]);
+	}
 </script>
 
 {#if $updateCards.length > 0}
 	<div id="update-card-box">
 		{#each $updateCards as card}
-			<div class="update-card sh">
+			<div use:clickOutside on:click_outside={closeAllCards} class="update-card sh">
 				<form on:submit|preventDefault={updateCard(card.did, card.id, card.title, card.content)}>
 					<div class="update-title">
 						<input name="title" type="text" bind:value={card.title} />

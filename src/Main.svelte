@@ -157,13 +157,13 @@
 			{/key}
 		</div>
 		<div id="nav-boards">
-			{#if selectedDeck.id == ""}
-				<p>No Boards</p>
-			{:else}
-				<ul>
-					{#each $decks[selectedDeck.arr].boards as board}
-						<li>{board.title}</li>
-					{/each}
+			{#if selectedDeck.id != ""}
+				<ul id="boards-list">
+					{#if $decks[selectedDeck.arr].boards != undefined}
+						{#each $decks[selectedDeck.arr].boards as board}
+							<li class="board-item">{board.title}</li>
+						{/each}
+					{/if}
 				</ul>
 			{/if}
 		</div>
@@ -254,10 +254,10 @@
 	nav {
 		color: var(--off-white);
 		width: 100%;
-		height: 60px;
 		background-color: var(--main-green);
 		/* border-bottom: 1px solid #252525; */
 		overflow: hidden;
+		display: flex;
 	}
 	#nav-icon {
 		display: flex;
@@ -278,6 +278,7 @@
 	#nav-deck {
 		display: flex;
 		height: 100%;
+		width: 360px;
 	}
 	#deck-title {
 		display: flex;
@@ -292,6 +293,43 @@
 		padding: 14px 16px 18px 16px;
 		width: 60px;
 		margin-right: -30px;
+	}
+	#boards-list {
+		list-style-type: none;
+		display: flex;
+		margin: 0px 0px 0px 12px;
+		height: 100%;
+		padding: 0px;
+	}
+	.board-item {
+		margin-left: 28px;
+		line-height: 60px;
+		position: relative;
+		padding: 0px 2px;
+		color: lightgrey;
+		cursor: pointer;
+	}
+	.board-item::after {
+		content: "";
+		position: absolute;
+		bottom: 0px;
+		left: 0px;
+		width: 100%;
+		height: 0px;
+		background-color: #eda700;
+		transition: height 0.1s;
+	}
+	.board-item:hover {
+		color: inherit;
+	}
+	.board-item:hover::after {
+		height: 4px;
+	}
+	.board-item.selected {
+		color: inherit;
+	}
+	.board-item.selected::after {
+		height: 4px;
 	}
 	#nav-side {
 		height: 100%;
