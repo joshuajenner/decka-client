@@ -2,7 +2,8 @@
 	import { currentUser } from "../store.js";
 	import { api } from "../store.js";
 
-	export let isOpen = false;
+	import { modalUpdateDeck } from "../store.js";
+
 	// id, title, content
 	export let deck = {};
 
@@ -10,7 +11,7 @@
 	let confirm = "";
 
 	function setClose() {
-		isOpen = false;
+		modalUpdateDeck.set(false);
 	}
 
 	async function updateDeck() {
@@ -25,7 +26,7 @@
 				"Content-Type": "application/json",
 			},
 		});
-		isOpen = false;
+		modalUpdateDeck.set(false);
 	}
 
 	async function deleteDeck() {
@@ -41,12 +42,12 @@
 					"Content-Type": "application/json",
 				},
 			});
-			isOpen = false;
+			modalUpdateDeck.set(false);
 		}
 	}
 </script>
 
-<div id="update-deck-box" class={isOpen ? " box open" : "close"}>
+<div id="update-deck-box" class={$modalUpdateDeck ? " box open" : "close"}>
 	<div id="blackout" on:click={setClose} />
 	<div id="update-deck-modal" class="modal">
 		<h6>{deck.title}</h6>

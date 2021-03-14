@@ -2,14 +2,15 @@
 	import { updateCards } from "../store.js";
 	import { decks } from "../store";
 
-	export let isOpen = false;
+	import { listCards } from "../store";
+	import { modalNewCard } from "../store";
+
 	export let arr;
-	export let newCardModalToggle = false;
 
 	import { fly } from "svelte/transition";
 
 	function openNewCardModal() {
-		newCardModalToggle = true;
+		modalNewCard.set(true);
 	}
 	function addToUpdate(did, id, title, content) {
 		$updateCards.push({
@@ -23,7 +24,7 @@
 	}
 </script>
 
-<div id="card-list" class={isOpen ? "open sh" : "close"}>
+<div id="card-list" class={$listCards ? "open sh" : "close"}>
 	<div id="card-list-menu">
 		<div class="card-menu-icon">
 			<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="slategrey">
@@ -66,7 +67,6 @@
 <style>
 	#card-list {
 		transition: margin 0.15s;
-		background-color: var(--less-white);
 		border-right: 1px solid lightgrey;
 		width: 340px !important;
 		z-index: 1;

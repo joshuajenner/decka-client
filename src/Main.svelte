@@ -2,6 +2,17 @@
 	import { currentUser } from "./store.js";
 	import { decks } from "./store";
 	import { api } from "./store.js";
+	import { selectedBoard } from "./store.js";
+
+	import { listAny } from "./store";
+	import { listDecks } from "./store";
+	import { listCards } from "./store";
+
+	import { modalUpdateDeck } from "./store";
+	import { modalNewDeck } from "./store";
+
+	import NavTop from "./components/NavTop.svelte";
+	import NavSide from "./components/NavSide.svelte";
 
 	import UpdateDeckModal from "./components/UpdateDeckModal.svelte";
 	import NewDeckModal from "./components/NewDeckModal.svelte";
@@ -10,7 +21,8 @@
 	import NewCardModal from "./components/NewCardModal.svelte";
 	import ListAllCards from "./components/ListAllCards.svelte";
 
-	import { fly } from "svelte/transition";
+	import Grid from "./boards/Grid.svelte";
+	import Columns from "./boards/Columns.svelte";
 
 	let selectedDeck = {
 		arr: 0,
@@ -21,15 +33,6 @@
 		title: "",
 		id: "",
 	};
-
-	let anyListOpen = true;
-	let deckListOpen = true;
-	let cardListOpen = false;
-
-	let newCardModalOpen = false;
-
-	let updateDeckModalOpen = false;
-	let newDeckModalOpen = false;
 
 	let deckList = [];
 
@@ -60,6 +63,7 @@
 		});
 		const allData = await res.json();
 		$decks[$decks.findIndex((deck) => deck.id === deckID)].boards = allData;
+		selectedBoard.set(allData[0]);
 		decks.set($decks);
 	}
 	async function getDeckCards(deckID) {
@@ -84,44 +88,32 @@
 			title: name,
 		};
 		toggleDeckList();
-		cardListOpen = true;
+		listCards.set(true);
 		getDeckCards(id);
 		getDeckBoards(id);
 	}
-	function toggleDeckList() {
-		deckListOpen = !deckListOpen;
-		checkListsOpen();
-	}
-	function toggleCardList() {
-		cardListOpen = !cardListOpen;
-		checkListsOpen();
-	}
-	function toggleAllLists() {
-		if (anyListOpen) {
-			deckListOpen = false;
-			cardListOpen = false;
+	function checkListsOpen() {
+		if ($listDecks || $listCards) {
+			listAny.set(true);
 		} else {
-			deckListOpen = true;
-			cardListOpen = true;
+			listAny.set(false);
 		}
-		anyListOpen = !anyListOpen;
+	}
+
+	function toggleDeckList() {
+		listDecks.set(!$listDecks);
+
+		checkListsOpen();
 	}
 	function openUpdateDeckModal(gid, gtitle) {
 		modalDeck = {
 			id: gid,
 			title: gtitle,
 		};
-		updateDeckModalOpen = true;
+		modalUpdateDeck.set(true);
 	}
 	function openNewDeckModal() {
-		newDeckModalOpen = true;
-	}
-	function checkListsOpen() {
-		if (deckListOpen || cardListOpen) {
-			anyListOpen = true;
-		} else {
-			anyListOpen = false;
-		}
+		modalNewDeck.set(true);
 	}
 	getDecks();
 </script>
@@ -135,70 +127,10 @@
 </svelte:head>
 
 <main>
-	<nav class="sh">
-		<div id="nav-deck">
-			<div id="nav-icon" class={anyListOpen ? "nav-icon-open" : "nav-icon-close"} on:click={toggleAllLists}>
-				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
-				</svg>
-			</div>
-			{#key selectedDeck}
-				<div id="deck-title" class="p" in:fly={{ y: 200, duration: 200 }} on:click={toggleDeckList}>
-					<h5>{selectedDeck.title}</h5>
-					{#if selectedDeck.title != ""}
-						<div id="nav-arrow">
-							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-							</svg>
-						</div>
-					{/if}
-				</div>
-				<div id="loader" class="center none"><span /></div>
-			{/key}
-		</div>
-		<div id="nav-boards">
-			{#if selectedDeck.id != ""}
-				<ul id="boards-list">
-					{#if $decks[selectedDeck.arr].boards != undefined}
-						{#each $decks[selectedDeck.arr].boards as board}
-							<li class="board-item">{board.title}</li>
-						{/each}
-					{/if}
-				</ul>
-			{/if}
-		</div>
-	</nav>
+	<NavTop bind:navDeck={selectedDeck} />
 	<div id="decka">
-		<div id="nav-side" class="flex">
-			<div id="tooltip-icon" class="nsi-icon">
-				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="slategrey">
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-					/>
-				</svg>
-			</div>
-			<div id="nav-side-icons">
-				<div id="decks-icon" class={deckListOpen ? "nsi-icon tt nso" : "nsi-icon tt nsc"} on:click={toggleDeckList}>
-					<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-					</svg>
-				</div>
-				<div id="cards-icon" class={cardListOpen ? "nsi-icon tt nso" : "nsi-icon tt nsc"} on:click={toggleCardList}>
-					<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-						/>
-					</svg>
-				</div>
-			</div>
-		</div>
-		<div id="deck-info" class={deckListOpen ? "open" : "close"}>
+		<NavSide />
+		<div id="deck-info" class={$listDecks ? "open" : "close"}>
 			<div id="all-lists" class="sh">
 				<div id="deck-list">
 					<div id="all-decks">
@@ -234,16 +166,29 @@
 					</div>
 				</div>
 				{#if selectedDeck.id != ""}
-					<ListAllCards bind:isOpen={cardListOpen} bind:arr={selectedDeck.arr} bind:newCardModalToggle={newCardModalOpen} />
+					<ListAllCards bind:arr={selectedDeck.arr} />
 				{/if}
 			</div>
 			<UpdateCardModal />
 		</div>
+		<div id="board">
+			{#if selectedDeck.id != ""}
+				{#if $decks[selectedDeck.arr].boards != undefined}
+					{#each $decks[selectedDeck.arr].boards as board}
+						{#if board.type == 0}
+							<Grid bind:boardID={board.id} />
+						{:else if board.type == 1}
+							<Columns bind:boardID={board.id} />
+						{/if}
+					{/each}
+				{/if}
+			{/if}
+		</div>
 	</div>
-	<NewCardModal bind:isOpen={newCardModalOpen} bind:deck={selectedDeck.id} />
+	<NewCardModal bind:deck={selectedDeck.id} />
 
-	<UpdateDeckModal bind:isOpen={updateDeckModalOpen} bind:deck={modalDeck} />
-	<NewDeckModal bind:isOpen={newDeckModalOpen} />
+	<UpdateDeckModal bind:deck={modalDeck} />
+	<NewDeckModal />
 </main>
 
 <style>
@@ -251,153 +196,10 @@
 		flex-direction: column;
 		display: flex;
 	}
-	nav {
-		color: var(--off-white);
-		width: 100%;
-		background-color: var(--main-green);
-		/* border-bottom: 1px solid #252525; */
-		overflow: hidden;
-		display: flex;
-	}
-	#nav-icon {
-		display: flex;
-		width: 60px;
-		padding: 16px;
-		border-right: 1px solid #032720;
-		cursor: pointer;
-	}
-	#nav-icon:hover svg {
-		stroke: #eda700;
-	}
-	.nav-icon-open svg {
-		stroke: #eda700;
-	}
-	.nav-icon-close svg {
-		stroke: var(--off-white);
-	}
-	#nav-deck {
-		display: flex;
-		height: 100%;
-		width: 360px;
-	}
-	#deck-title {
-		display: flex;
-		width: 300px;
-		align-items: center;
-		padding-left: 24px;
-		justify-content: space-between;
-		cursor: pointer;
-	}
-	#nav-arrow {
-		height: 100%;
-		padding: 14px 16px 18px 16px;
-		width: 60px;
-		margin-right: -30px;
-	}
-	#boards-list {
-		list-style-type: none;
-		display: flex;
-		margin: 0px 0px 0px 12px;
-		height: 100%;
-		padding: 0px;
-	}
-	.board-item {
-		margin-left: 28px;
-		line-height: 60px;
-		position: relative;
-		padding: 0px 2px;
-		color: lightgrey;
-		cursor: pointer;
-	}
-	.board-item::after {
-		content: "";
-		position: absolute;
-		bottom: 0px;
-		left: 0px;
-		width: 100%;
-		height: 0px;
-		background-color: #eda700;
-		transition: height 0.1s;
-	}
-	.board-item:hover {
-		color: inherit;
-	}
-	.board-item:hover::after {
-		height: 4px;
-	}
-	.board-item.selected {
-		color: inherit;
-	}
-	.board-item.selected::after {
-		height: 4px;
-	}
-	#nav-side {
-		height: 100%;
-		position: relative;
-		z-index: 5;
-		width: 60px;
-		background-color: var(--off-white);
-		border-right: 1px solid lightgrey;
-		display: flex;
-		flex-direction: column-reverse;
-		justify-content: space-between;
-	}
-	.nsi-icon {
-		height: 60px;
-		width: 100%;
-		padding: 16px;
-		background-color: var(--off-white);
-		cursor: pointer;
-	}
-	.nsc:hover svg {
-		stroke: #eda700;
-	}
-	.nso {
-		background-color: #eda700;
-	}
-	.nso svg {
-		stroke: var(--off-white);
-	}
-	.nsc svg {
-		stroke: black;
-	}
-	#tooltip-icon:hover ~ div .tt:after {
-		left: 100%;
-		transform: translate(20%, -50%);
-		opacity: 100%;
-	}
-	#tooltip-icon:hover svg {
-		stroke: black;
-	}
-	.tt {
-		position: relative;
-	}
-	#decks-icon:after {
-		content: "Decks";
-	}
-	#cards-icon:after {
-		content: "Cards";
-	}
-	#decks-icon:after,
-	#cards-icon:after {
-		line-height: 50px;
-		height: 48px;
-		width: 68px;
-		padding: 0px 12px;
-		position: absolute;
-		left: -110%;
-		top: 50%;
-		opacity: 0%;
-		background-color: rgba(0, 0, 0, 0.8);
-		color: white;
-		transform: translate(0px, -50%);
-		transition: left, transform 0.2s, opacity 0.2s;
-		border-radius: 8px;
-		z-index: -1;
-	}
 	#decka {
 		height: 100%;
 		position: relative;
+		display: flex;
 	}
 	#all-lists {
 		display: flex;
@@ -415,17 +217,15 @@
 	#deck-info {
 		display: flex;
 		height: 100%;
-		position: absolute;
-		top: 0px;
-		transition: left 0.15s;
+		transition: margin-left 0.15s;
 		background-color: var(--less-white);
 	}
 
 	#deck-info.open {
-		left: 60px;
+		margin-left: 0px;
 	}
 	#deck-info.close {
-		left: -240px;
+		margin-left: -300px;
 	}
 
 	.deck-item {
@@ -471,5 +271,8 @@
 	#new-deck:hover svg {
 		color: #eda700;
 		stroke: #eda700;
+	}
+	#board {
+		flex-grow: 1;
 	}
 </style>
