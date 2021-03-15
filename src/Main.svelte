@@ -17,6 +17,8 @@
 	import UpdateDeckModal from "./components/UpdateDeckModal.svelte";
 	import NewDeckModal from "./components/NewDeckModal.svelte";
 
+	import NewBoardModal from "./components/NewBoardModal.svelte";
+
 	import UpdateCardModal from "./components/UpdateCardModal.svelte";
 	import NewCardModal from "./components/NewCardModal.svelte";
 	import ListAllCards from "./components/ListAllCards.svelte";
@@ -25,7 +27,7 @@
 	import Columns from "./boards/Columns.svelte";
 
 	let selectedDeck = {
-		arr: 0,
+		arr: -1,
 		title: "",
 		id: "",
 	};
@@ -33,8 +35,7 @@
 		title: "",
 		id: "",
 	};
-
-	let deckList = [];
+	let boardsLoaded = [];
 
 	async function getDecks() {
 		const res = await fetch(`${$api}/getdecks`, {
@@ -48,6 +49,7 @@
 		});
 		const allDecks = await res.json();
 		console.log(allDecks);
+		setBoardsStatus(allDecks.length);
 		$decks = allDecks;
 	}
 	async function getDeckBoards(deckID) {
@@ -63,7 +65,11 @@
 		});
 		const allData = await res.json();
 		$decks[$decks.findIndex((deck) => deck.id === deckID)].boards = allData;
-		selectedBoard.set(allData[0]);
+		selectedBoard.set({
+			id: allData[0].id,
+			i: 0,
+		});
+		boardsLoaded[selectedDeck.arr] = true;
 		decks.set($decks);
 	}
 	async function getDeckCards(deckID) {
@@ -115,6 +121,12 @@
 	function openNewDeckModal() {
 		modalNewDeck.set(true);
 	}
+	function setBoardsStatus(l) {
+		for (let i = 0; i < l; i++) {
+			boardsLoaded.push(false);
+		}
+		console.log(boardsLoaded);
+	}
 	getDecks();
 </script>
 
@@ -127,14 +139,14 @@
 </svelte:head>
 
 <main>
-	<NavTop bind:navDeck={selectedDeck} />
+	<NavTop bind:navDeck={selectedDeck} bind:boardStatus={boardsLoaded} />
 	<div id="decka">
 		<NavSide />
 		<div id="deck-info" class={$listDecks ? "open" : "close"}>
 			<div id="all-lists" class="sh">
 				<div id="deck-list">
 					<div id="all-decks">
-						{#if deckList == []}
+						{#if $decks == {}}
 							<p>No decks to display.</p>
 						{:else}
 							{#each $decks as deckItem (deckItem.id)}
@@ -172,13 +184,13 @@
 			<UpdateCardModal />
 		</div>
 		<div id="board">
-			{#if selectedDeck.id != ""}
-				{#if $decks[selectedDeck.arr].boards != undefined}
-					{#each $decks[selectedDeck.arr].boards as board}
+			{#if selectedDeck.arr != -1}
+				{#if boardsLoaded[selectedDeck.arr] == true}
+					{#each $decks[selectedDeck.arr].boards as board, index}
 						{#if board.type == 0}
-							<Grid bind:boardID={board.id} />
+							<Grid bind:boardID={board.id} boardI={index} />
 						{:else if board.type == 1}
-							<Columns bind:boardID={board.id} />
+							<Columns bind:boardID={board.id} boardI={index} bind:deckID={selectedDeck.id} bind:deckArr={selectedDeck.arr} />
 						{/if}
 					{/each}
 				{/if}
@@ -186,7 +198,7 @@
 		</div>
 	</div>
 	<NewCardModal bind:deck={selectedDeck.id} />
-
+	<NewBoardModal bind:deckID={selectedDeck.id} />
 	<UpdateDeckModal bind:deck={modalDeck} />
 	<NewDeckModal />
 </main>
@@ -213,21 +225,16 @@
 	}
 	#deck-info {
 		z-index: 2;
-	}
-	#deck-info {
 		display: flex;
 		height: 100%;
 		transition: margin-left 0.15s;
-		background-color: var(--less-white);
 	}
-
 	#deck-info.open {
 		margin-left: 0px;
 	}
 	#deck-info.close {
 		margin-left: -300px;
 	}
-
 	.deck-item {
 		height: 60px;
 		border-bottom: 1px solid lightgrey;

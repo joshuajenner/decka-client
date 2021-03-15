@@ -24,5 +24,6 @@ export const listDecks = writable(true);
 export const listCards = writable(false);
 
 export const modalNewCard = writable(false);
+export const modalNewBoard = writable(false);
 export const modalUpdateDeck = writable(false);
 export const modalNewDeck = writable(false);

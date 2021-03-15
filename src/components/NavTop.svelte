@@ -6,15 +6,18 @@
 	import { listDecks } from "../store";
 	import { listCards } from "../store";
 
+	import { modalNewBoard } from "../store";
+
 	import { fly } from "svelte/transition";
 
 	export let navDeck;
+	export let boardStatus;
 
 	function checkListsOpen() {
 		if ($listDecks || $listCards) {
 			listAny.set(true);
 		} else {
-			listsAny.set(false);
+			listAny.set(false);
 		}
 	}
 	function toggleAllLists() {
@@ -30,6 +33,9 @@
 	function toggleDeckList() {
 		listDecks.set(!$listDecks);
 		checkListsOpen();
+	}
+	function openNewBoard() {
+		modalNewBoard.set(true);
 	}
 	function selectBoard(b) {
 		selectedBoard.set(b);
@@ -58,9 +64,9 @@
 		{/key}
 	</div>
 	<div id="nav-boards">
-		{#if navDeck.id != ""}
+		{#if navDeck.arr != -1}
 			<ul id="boards-list">
-				{#if $decks[navDeck.arr].boards != undefined}
+				{#if boardStatus[navDeck.arr] == true}
 					{#each $decks[navDeck.arr].boards as board, i}
 						<li on:click={selectBoard(board)} class={$selectedBoard.id === board.id ? "board-item selected" : "board-item"}>
 							{#if board.type == 0}
@@ -86,7 +92,7 @@
 						</li>
 					{/each}
 				{/if}
-				<li class="board-item">
+				<li class="board-item" on:click={openNewBoard}>
 					<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
 					</svg> Add Board

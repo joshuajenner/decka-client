@@ -60,6 +60,9 @@
 		background-color: var(--off-white);
 		cursor: pointer;
 	}
+	.nsi-icon svg {
+		width: 24px;
+	}
 	.nsc:hover svg {
 		stroke: #eda700;
 	}

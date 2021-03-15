@@ -1,43 +1,48 @@
 <script>
 	import { currentUser } from "../store.js";
 	import { api } from "../store.js";
+	import { modalNewBoard } from "../store";
 
-	import { modalNewCard } from "../store";
-
-	export let deck = "";
+	export let deckID;
 	let formTitle;
-	let formContent;
+	let formType;
 
-	function setClose() {
-		modalNewCard.set(false);
-		formTitle = "";
-		formContent = "";
-	}
-	async function newCard() {
-		const res = await fetch(`${$api}/newcard`, {
+	async function newBoard() {
+		const res = await fetch(`${$api}/newboard`, {
 			method: "POST",
 			body: JSON.stringify({
 				uid: $currentUser.uid,
-				did: deck,
+				did: deckID,
 				title: formTitle,
-				content: formContent,
+				type: formType,
 			}),
 			headers: {
 				"Content-Type": "application/json",
 			},
 		});
-		modalNewCard.set(false);
+		const allData = await res;
+		setClose();
+	}
+	function setClose() {
+		modalNewBoard.set(false);
 	}
 </script>
 
-<div id="new-card-box" class={$modalNewCard ? "open" : "close"}>
+<div id="new-board-box" class={$modalNewBoard ? "open" : "close"}>
 	<div id="blackout" on:click={setClose} />
-	<div id="new-card-modal">
-		<form method="post" on:submit|preventDefault={newCard}>
+	<div id="new-board">
+		<form method="post" on:submit|preventDefault={newBoard}>
 			<label for="title">Title</label>
 			<input name="title" type="text" bind:value={formTitle} />
-			<label for="content">Content</label>
-			<input name="content" type="text" bind:value={formContent} />
+			<label for="title">Type</label>
+			<label>
+				<input type="radio" bind:group={formType} value={0} />
+				Grid
+			</label>
+			<label>
+				<input type="radio" bind:group={formType} value={1} />
+				Columns
+			</label>
 			<button type="submit">Submit</button>
 		</form>
 		<div id="close-box" on:click={setClose}>
@@ -49,7 +54,7 @@
 </div>
 
 <style>
-	#new-card-box {
+	#new-board-box {
 		z-index: 10;
 		position: absolute;
 		top: 0px;
@@ -65,7 +70,7 @@
 		width: 100%;
 		background-color: rgba(0, 0, 0, 0.6);
 	}
-	#new-card-modal {
+	#new-board {
 		position: relative;
 		width: 40%;
 		background-color: var(--off-white);
