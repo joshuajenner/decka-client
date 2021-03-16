@@ -85,7 +85,6 @@
 		});
 		const allData = await res.json();
 		$decks[$decks.findIndex((deck) => deck.id === deckID)].cards = allData;
-		console.log($decks);
 	}
 	function selectDeck(id, name) {
 		selectedDeck = {
@@ -96,7 +95,14 @@
 		toggleDeckList();
 		listCards.set(true);
 		getDeckCards(id);
-		getDeckBoards(id);
+		if (!boardsLoaded[selectedDeck.arr]) {
+			getDeckBoards(id);
+		} else {
+			selectedBoard.set({
+				id: $decks[selectedDeck.arr].boards[0].id,
+				i: 0,
+			});
+		}
 	}
 	function checkListsOpen() {
 		if ($listDecks || $listCards) {

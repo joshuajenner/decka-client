@@ -3,6 +3,9 @@
 	import { api } from "../store.js";
 	import { decks } from "../store";
 
+	import { flip } from "svelte/animate";
+	import { dndzone } from "svelte-dnd-action";
+
 	import { clickOutside } from "../functions/clickOutside.js";
 
 	import { selectedBoard } from "../store";
@@ -14,9 +17,29 @@
 	let colTitle;
 	let enterList = false;
 	let input;
-	let newColumns;
+	let columnsLoaded = false;
+	const flipDurationMs = 300;
 	// let newOrder = $decks[deckArr].board[boardI].columns.length + 1;
 	// let newOrder = $decks[deckArr].boards.length + 1;
+
+	async function getColumns() {
+		const res = await fetch(`${$api}/getColumns`, {
+			method: "POST",
+			body: JSON.stringify({
+				uid: $currentUser.uid,
+				did: deckID,
+				bid: $selectedBoard.id,
+			}),
+			headers: {
+				"Content-Type": "application/json",
+			},
+		});
+		const allColumns = await res.json();
+		$decks[deckArr].boards[boardI].columns = allColumns;
+		decks.set($decks);
+		console.log($decks[0]);
+		columnsLoaded = true;
+	}
 
 	async function newColumn() {
 		const res = await fetch(`${$api}/newcolumn`, {
@@ -32,7 +55,7 @@
 				"Content-Type": "application/json",
 			},
 		});
-		newColumns = $decks[deckArr].boards[boardI].columns.push({
+		$decks[deckArr].boards[boardI].columns.push({
 			title: colTitle,
 			order: $decks[deckArr].boards[boardI].columns.length,
 		});
@@ -42,19 +65,44 @@
 	function openInput() {
 		input.focus();
 		enterList = true;
+		console.log(columnsLoaded);
 	}
 	function closeInput() {
 		enterList = false;
 		colTitle = "";
 	}
+	function handleDndConsider(e) {
+		items = e.detail.items;
+	}
+	function handleDndFinalize(e) {
+		items = e.detail.items;
+	}
+
+	getColumns();
 </script>
 
 <div class={$selectedBoard.id === boardID ? "columns" : "unselected"}>
-	{#each $decks[deckArr].boards[boardI].columns as column}
-		<div class="column">
-			<h5>{column.title}</h5>
-		</div>
-	{/each}
+	{#if columnsLoaded}
+		{#each $decks[deckArr].boards[boardI].columns as column}
+			<div class="column">
+				<div class="column-title">
+					<h5>{column.title}</h5>
+					<div class="column-adj">
+						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="slategrey">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"
+							/>
+						</svg>
+					</div>
+				</div>
+				<div class="column-body">body</div>
+			</div>
+		{/each}
+	{/if}
+
 	<div class="column">
 		<div use:clickOutside on:click_outside={closeInput} class={enterList == true ? " column-title enter" : "column-title display"}>
 			<div on:click={openInput} class="add-column">
@@ -82,7 +130,7 @@
 
 <style>
 	.columns {
-		padding: 8px;
+		padding: 16px;
 		display: flex;
 	}
 	.unselected {
@@ -92,20 +140,45 @@
 		margin-left: 0px;
 	}
 	.column {
-		background-color: var(--column);
-		border-radius: 16px;
-		width: 20vw;
+		width: 338px;
 		margin-left: 16px;
 	}
-	.column:hover {
+	.column:hover .column-title,
+	.column:hover .column-body {
 		background-color: var(--hv-column);
 	}
 	.column-title {
+		background-color: var(--column);
+		border-top-left-radius: 16px;
+		border-top-right-radius: 16px;
 		height: 60px;
 		transition: height 0.2s;
+		padding: 16px;
+		display: flex;
+		justify-content: space-between;
+	}
+	.column-adj {
+		height: 24px;
+	}
+	.column-adj svg {
+		height: 100%;
+	}
+	.column-body {
+		border-bottom-left-radius: 16px;
+		border-bottom-right-radius: 16px;
+		background-color: var(--column);
+		padding: 16px;
 	}
 	.column-title.enter {
 		height: 108px;
+		border-bottom-left-radius: 16px;
+		border-bottom-right-radius: 16px;
+		padding: 0px 16px;
+	}
+	.column-title.display {
+		border-bottom-left-radius: 16px;
+		border-bottom-right-radius: 16px;
+		padding: 0px 16px;
 	}
 	.enter .add-column {
 		display: none;
