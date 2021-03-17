@@ -19,6 +19,7 @@
 	let input;
 	let columnsLoaded = false;
 	const flipDurationMs = 300;
+	let tempCard;
 	// let newOrder = $decks[deckArr].board[boardI].columns.length + 1;
 	// let newOrder = $decks[deckArr].boards.length + 1;
 
@@ -77,7 +78,10 @@
 	function handleDndFinalize(e) {
 		items = e.detail.items;
 	}
-
+	function getCardFromRef(ref) {
+		tempCard = $decks[deckArr].cards[$decks[deckArr].cards.findIndex((c) => c.id === ref)];
+		console.log(tempCard);
+	}
 	getColumns();
 </script>
 
@@ -98,7 +102,16 @@
 						</svg>
 					</div>
 				</div>
-				<div class="column-body">body</div>
+				<div class="column-body">
+					{#each column.cards as card}
+						{getCardFromRef(card.refID)}
+						<div class="card">
+							<div id={card.id} class="card-title">
+								<p>{tempCard.id}</p>
+							</div>
+						</div>
+					{/each}
+				</div>
 			</div>
 		{/each}
 	{/if}
