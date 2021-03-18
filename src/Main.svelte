@@ -26,6 +26,14 @@
 	import Grid from "./boards/Grid.svelte";
 	import Columns from "./boards/Columns.svelte";
 
+	let tempCards = [
+		{ id: "test1", order: 1, title: "Test 1", content: "Test Content" },
+		{ id: "test2", order: 2, title: "Test 2", content: "Test Content" },
+		{ id: "test3", order: 3, title: "Test 3", content: "Test Content" },
+		{ id: "test4", order: 4, title: "Test 4", content: "Test Content" },
+		{ id: "test5", order: 5, title: "Test 5", content: "Test Content" },
+	];
+
 	let selectedDeck = {
 		arr: -1,
 		title: "",
@@ -184,7 +192,7 @@
 					</div>
 				</div>
 				{#if selectedDeck.id != ""}
-					<ListAllCards bind:arr={selectedDeck.arr} />
+					<ListAllCards bind:arr={selectedDeck.arr} bind:items={tempCards} />
 				{/if}
 			</div>
 			<UpdateCardModal />

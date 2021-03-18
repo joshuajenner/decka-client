@@ -2,12 +2,14 @@
 	import { updateCards } from "../store.js";
 	import { decks } from "../store";
 
+	import ListAllCardsDND from "./ListAllCardsDND.svelte";
+
 	import { listCards } from "../store";
 	import { modalNewCard } from "../store";
+	import ListAllCardsDnd from "./ListAllCardsDND.svelte";
 
 	export let arr;
-
-	import { fly } from "svelte/transition";
+	export let items;
 
 	function openNewCardModal() {
 		modalNewCard.set(true);
@@ -21,6 +23,15 @@
 		});
 		updateCards.set($updateCards);
 		console.log($updateCards);
+	}
+
+	function handleSort(e) {
+		console.log(e.detail.items);
+		items = e.detail.items;
+		itemsFunc();
+	}
+	function itemsFunc() {
+		items = items;
 	}
 </script>
 
@@ -42,26 +53,18 @@
 			</svg>
 		</div>
 	</div>
-	<div id="all-cards">
-		{#if $decks[arr].cards == undefined}
-			<div id="loader" class="center dark"><span /></div>
-		{:else if $decks[arr].cards.length == 0}
-			<p class="lato">No Cards to display.</p>
-		{:else}
-			{#each $decks[arr].cards as card (card.id)}
-				<div on:click={addToUpdate($decks[arr].id, card.id, card.data.title, card.data.content)} id={card.id} class="card- card-sh" in:fly={{ y: -33, duration: 200 }}>
-					<div class="card-title">
-						<p class="lato">
-							{card.data.title}
-						</p>
-					</div>
-					<div class="card-content">
-						<p>{card.data.content}</p>
-					</div>
-				</div>
-			{/each}
-		{/if}
-	</div>
+	{#if items != undefined}
+		<div id="all-cards">
+			<!-- {#if $decks[arr].cards == undefined}
+				<div id="loader" class="center dark"><span /></div>
+			{:else if $decks[arr].cards.length == 0}
+				<p class="lato">No Cards to display.</p>
+			{:else} -->
+
+			<!-- {/if} -->
+		</div>
+		<ListAllCardsDnd bind:items />
+	{/if}
 </div>
 
 <style>

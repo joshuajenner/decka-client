@@ -103,14 +103,14 @@
 					</div>
 				</div>
 				<div class="column-body">
-					{#each column.cards as card}
+					<!-- {#each column.cards as card}
 						{getCardFromRef(card.refID)}
 						<div class="card">
 							<div id={card.id} class="card-title">
 								<p>{tempCard.id}</p>
 							</div>
 						</div>
-					{/each}
+					{/each} -->
 				</div>
 			</div>
 		{/each}
