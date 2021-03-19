@@ -1,35 +1,19 @@
 <!-- on:click={addToUpdate($decks[arr].id, item.id, item.title, item.content)} -->
 <script>
-	import { flip } from "svelte/animate";
-	import { fly } from "svelte/transition";
-
-	import { dndzone } from "svelte-dnd-action";
-
-	const flipDurationMs = 200;
-
 	let type = "all";
-	export let items;
+	let items = [
+		{ id: "test1", order: 1, title: "Test 1", content: "Test Content" },
+		{ id: "test2", order: 2, title: "Test 2", content: "Test Content" },
+		{ id: "test3", order: 3, title: "Test 3", content: "Test Content" },
+		{ id: "test4", order: 4, title: "Test 4", content: "Test Content" },
+		{ id: "test5", order: 5, title: "Test 5", content: "Test Content" },
+	];
 
 	function handleSort(e) {
-		console.log(e.detail.items);
+		console.log(e);
 		items = e.detail.items;
 	}
 </script>
-
-<section use:dndzone={{ items, flipDurationMs, type }} on:consider={handleSort} on:finalize={handleSort}>
-	{#each items as item (item.id)}
-		<div id={item.id} class="card- card-sh" in:fly={{ y: -33, duration: 200 }} animate:flip={{ duration: flipDurationMs }}>
-			<div class="card-title">
-				<p class="lato">
-					{item.title}
-				</p>
-			</div>
-			<div class="card-content">
-				<p>{item.content}</p>
-			</div>
-		</div>
-	{/each}
-</section>
 
 <style>
 </style>

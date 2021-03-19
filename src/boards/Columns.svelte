@@ -3,10 +3,9 @@
 	import { api } from "../store.js";
 	import { decks } from "../store";
 
-	import { flip } from "svelte/animate";
-	import { dndzone } from "svelte-dnd-action";
-
 	import { clickOutside } from "../functions/clickOutside.js";
+
+	import ColumnsDND from "./ColumnsDND.svelte";
 
 	import { selectedBoard } from "../store";
 
@@ -18,8 +17,7 @@
 	let enterList = false;
 	let input;
 	let columnsLoaded = false;
-	const flipDurationMs = 300;
-	let tempCard;
+
 	// let newOrder = $decks[deckArr].board[boardI].columns.length + 1;
 	// let newOrder = $decks[deckArr].boards.length + 1;
 
@@ -38,7 +36,7 @@
 		const allColumns = await res.json();
 		$decks[deckArr].boards[boardI].columns = allColumns;
 		decks.set($decks);
-		console.log($decks[0]);
+		console.log($decks[deckArr].boards[boardI].columns);
 		columnsLoaded = true;
 	}
 
@@ -72,16 +70,12 @@
 		enterList = false;
 		colTitle = "";
 	}
-	function handleDndConsider(e) {
-		items = e.detail.items;
-	}
-	function handleDndFinalize(e) {
-		items = e.detail.items;
-	}
+
 	function getCardFromRef(ref) {
 		tempCard = $decks[deckArr].cards[$decks[deckArr].cards.findIndex((c) => c.id === ref)];
 		console.log(tempCard);
 	}
+
 	getColumns();
 </script>
 
@@ -102,16 +96,7 @@
 						</svg>
 					</div>
 				</div>
-				<div class="column-body">
-					<!-- {#each column.cards as card}
-						{getCardFromRef(card.refID)}
-						<div class="card">
-							<div id={card.id} class="card-title">
-								<p>{tempCard.id}</p>
-							</div>
-						</div>
-					{/each} -->
-				</div>
+				<ColumnsDND di={deckArr} bi={boardI} cid={column.id} />
 			</div>
 		{/each}
 	{/if}
@@ -142,6 +127,38 @@
 </div>
 
 <style>
+	.card {
+		border-radius: 12px;
+		border: 1px solid lightgrey;
+		padding: 8px 16px;
+		background-color: var(--off-white);
+		position: relative;
+		cursor: pointer;
+	}
+	.card:hover {
+		border-color: black;
+	}
+	.card-title {
+		font-weight: bold;
+		margin-bottom: 16px;
+		padding: 8px 0px 4px 0px;
+		border-bottom: 1px solid lightgrey;
+	}
+	/* .custom-shadow-item {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		visibility: visible;
+		background: var(--main-green);
+		opacity: 0.5;
+		margin: 0;
+		border-radius: 12px;
+		border: 1px solid lightgrey;
+		padding: 8px 16px;
+		min-height: 240px;
+	} */
 	.columns {
 		padding: 16px;
 		display: flex;
@@ -175,12 +192,6 @@
 	}
 	.column-adj svg {
 		height: 100%;
-	}
-	.column-body {
-		border-bottom-left-radius: 16px;
-		border-bottom-right-radius: 16px;
-		background-color: var(--column);
-		padding: 16px;
 	}
 	.column-title.enter {
 		height: 108px;

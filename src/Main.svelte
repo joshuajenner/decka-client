@@ -27,11 +27,11 @@
 	import Columns from "./boards/Columns.svelte";
 
 	let tempCards = [
-		{ id: "test1", order: 1, title: "Test 1", content: "Test Content" },
-		{ id: "test2", order: 2, title: "Test 2", content: "Test Content" },
-		{ id: "test3", order: 3, title: "Test 3", content: "Test Content" },
-		{ id: "test4", order: 4, title: "Test 4", content: "Test Content" },
-		{ id: "test5", order: 5, title: "Test 5", content: "Test Content" },
+		{ id: "test1", order: 7, title: "Test 1", content: "Test Content" },
+		{ id: "test2", order: 8, title: "Test 2", content: "Test Content" },
+		{ id: "test3", order: 10, title: "Test 3", content: "Test Content" },
+		{ id: "test4", order: 16, title: "Test 4", content: "Test Content" },
+		{ id: "test5", order: 32, title: "Test 5", content: "Test Content" },
 	];
 
 	let selectedDeck = {

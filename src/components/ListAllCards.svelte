@@ -2,14 +2,16 @@
 	import { updateCards } from "../store.js";
 	import { decks } from "../store";
 
-	import ListAllCardsDND from "./ListAllCardsDND.svelte";
+	import { flip } from "svelte/animate";
+	import { fly } from "svelte/transition";
+
+	import { dndzone, SHADOW_ITEM_MARKER_PROPERTY_NAME } from "svelte-dnd-action";
 
 	import { listCards } from "../store";
 	import { modalNewCard } from "../store";
-	import ListAllCardsDnd from "./ListAllCardsDND.svelte";
 
 	export let arr;
-	export let items;
+	const flipDurationMs = 200;
 
 	function openNewCardModal() {
 		modalNewCard.set(true);
@@ -26,12 +28,11 @@
 	}
 
 	function handleSort(e) {
-		console.log(e.detail.items);
-		items = e.detail.items;
-		itemsFunc();
+		$decks[arr].cards = e.detail.items;
+		console.log(e);
 	}
-	function itemsFunc() {
-		items = items;
+	function transformDraggedElement(draggedEl, data, index) {
+		draggedEl.style.opacity = 0.7;
 	}
 </script>
 
@@ -53,17 +54,39 @@
 			</svg>
 		</div>
 	</div>
-	{#if items != undefined}
+	{#if $decks[arr].cards != undefined}
 		<div id="all-cards">
-			<!-- {#if $decks[arr].cards == undefined}
+			{#if $decks[arr].cards == undefined}
 				<div id="loader" class="center dark"><span /></div>
-			{:else if $decks[arr].cards.length == 0}
-				<p class="lato">No Cards to display.</p>
-			{:else} -->
-
-			<!-- {/if} -->
+			{:else}
+				{#if $decks[arr].cards.length == 0}
+					<p class="lato">No Cards to display.</p>
+				{/if}
+				<section use:dndzone={{ items: $decks[arr].cards, flipDurationMs, transformDraggedElement }} on:consider={handleSort} on:finalize={handleSort}>
+					{#each $decks[arr].cards as item (item.order)}
+						<div
+							id={item.id}
+							class="card"
+							in:fly={{ y: -33, duration: 200 }}
+							animate:flip={{ duration: flipDurationMs }}
+							on:click={addToUpdate($decks[arr].id, item.id, item.title, item.content)}
+						>
+							<div class="card-title">
+								<p class="lato">
+									{item.title}
+								</p>
+							</div>
+							<div class="card-content">
+								<p>{item.content}</p>
+							</div>
+							{#if item[SHADOW_ITEM_MARKER_PROPERTY_NAME]}
+								<div class="custom-shadow-item">{item.title}</div>
+							{/if}
+						</div>
+					{/each}
+				</section>
+			{/if}
 		</div>
-		<ListAllCardsDnd bind:items />
 	{/if}
 </div>
 
@@ -108,7 +131,7 @@
 		overflow-y: scroll;
 		height: 100%;
 	}
-	.card- {
+	.card {
 		border-radius: 12px;
 		border: 1px solid lightgrey;
 		padding: 8px 16px;
@@ -119,17 +142,32 @@
 		transition: margin 0.2s;
 		cursor: pointer;
 	}
-	.card-sh {
+	.card.sh {
 		box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;
 	}
-	.card-:first-of-type {
+	.custom-shadow-item {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		visibility: visible;
+		background: var(--main-green);
+		opacity: 0.5;
+		margin: 0;
+		border-radius: 12px;
+		border: 1px solid lightgrey;
+		padding: 8px 16px;
+		min-height: 240px;
+	}
+	.card:first-of-type {
 		margin-top: 24px;
 	}
-	.card-:first-of-type:hover {
+	.card:first-of-type:hover {
 		margin-top: 0px;
 		margin-bottom: 24px;
 	}
-	.card-:hover {
+	.card:hover {
 		margin-top: -204px;
 		margin-bottom: 24px;
 		border-color: black;
