@@ -12,7 +12,6 @@
 	const flipDurationMs = 300;
 
 	function handleSort(e) {
-		console.log(e);
 		$decks[di].boards[bi].columns[ci].cards = e.detail.items;
 	}
 
@@ -20,7 +19,6 @@
 		draggedEl.style.opacity = 0.7;
 	}
 	ci = $decks[di].boards[bi].columns.findIndex((c) => c.id === cid);
-	console.log(ci);
 </script>
 
 <section class="column-body" use:dndzone={{ items: $decks[di].boards[bi].columns[ci].cards, flipDurationMs, transformDraggedElement }} on:consider={handleSort} on:finalize={handleSort}>
@@ -47,6 +45,9 @@
 		padding: 16px;
 		min-height: 64px;
 	}
+	.column-body:hover {
+		background-color: var(--hv-column);
+	}
 	.card {
 		border-radius: 12px;
 		border: 1px solid lightgrey;
@@ -54,6 +55,12 @@
 		background-color: var(--off-white);
 		position: relative;
 		cursor: pointer;
+	}
+	.card-title {
+		padding: 4px 0px 8px 0px;
+		border-bottom: 1px solid lightgray;
+		margin-bottom: 8px;
+		font-weight: bold;
 	}
 	.custom-shadow-item {
 		position: absolute;

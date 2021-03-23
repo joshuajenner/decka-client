@@ -211,7 +211,7 @@
 			{/if}
 		</div>
 	</div>
-	<NewCardModal bind:deck={selectedDeck.id} />
+	<NewCardModal bind:deck={selectedDeck} />
 	<NewBoardModal bind:deckID={selectedDeck.id} />
 	<UpdateDeckModal bind:deck={modalDeck} />
 	<NewDeckModal />

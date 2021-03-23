@@ -17,6 +17,7 @@
 	let enterList = false;
 	let input;
 	let columnsLoaded = false;
+	let colAdjs = [];
 
 	// let newOrder = $decks[deckArr].board[boardI].columns.length + 1;
 	// let newOrder = $decks[deckArr].boards.length + 1;
@@ -37,9 +38,12 @@
 		$decks[deckArr].boards[boardI].columns = allColumns;
 		decks.set($decks);
 		console.log($decks[deckArr].boards[boardI].columns);
+		let col;
+		for (col in allColumns) {
+			colAdjs.push(false);
+		}
 		columnsLoaded = true;
 	}
-
 	async function newColumn() {
 		const res = await fetch(`${$api}/newcolumn`, {
 			method: "POST",
@@ -70,22 +74,19 @@
 		enterList = false;
 		colTitle = "";
 	}
-
-	function getCardFromRef(ref) {
-		tempCard = $decks[deckArr].cards[$decks[deckArr].cards.findIndex((c) => c.id === ref)];
-		console.log(tempCard);
+	function openAdj(ind) {
+		colAdjs[ind] = !colAdjs[ind];
 	}
-
 	getColumns();
 </script>
 
 <div class={$selectedBoard.id === boardID ? "columns" : "unselected"}>
 	{#if columnsLoaded}
-		{#each $decks[deckArr].boards[boardI].columns as column}
+		{#each $decks[deckArr].boards[boardI].columns as column, index}
 			<div class="column">
 				<div class="column-title">
 					<h5>{column.title}</h5>
-					<div class="column-adj">
+					<div on:click={() => openAdj(index)} class="column-adj">
 						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="slategrey">
 							<path
 								stroke-linecap="round"
@@ -94,6 +95,14 @@
 								d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"
 							/>
 						</svg>
+					</div>
+					<div class={colAdjs[index] == true ? "column-options open" : "column-options closed"}>
+						<div class="bubble">
+							<p>Properties</p>
+						</div>
+						<div class="col-delete">
+							<button class="button-delete">Delete</button>
+						</div>
 					</div>
 				</div>
 				<ColumnsDND di={deckArr} bi={boardI} cid={column.id} />
@@ -172,10 +181,7 @@
 	.column {
 		width: 338px;
 		margin-left: 16px;
-	}
-	.column:hover .column-title,
-	.column:hover .column-body {
-		background-color: var(--hv-column);
+		position: relative;
 	}
 	.column-title {
 		background-color: var(--column);
@@ -186,6 +192,9 @@
 		padding: 16px;
 		display: flex;
 		justify-content: space-between;
+	}
+	.column-title:hover {
+		background-color: var(--hv-column);
 	}
 	.column-adj {
 		height: 24px;
@@ -203,6 +212,20 @@
 		border-bottom-left-radius: 16px;
 		border-bottom-right-radius: 16px;
 		padding: 0px 16px;
+	}
+	.column-options {
+		position: absolute;
+		z-index: 5;
+		right: -96px;
+	}
+	.column-options .bubble {
+		background-color: var(--main-white);
+	}
+	.column-options.open {
+		display: block;
+	}
+	.column-options.closed {
+		display: none;
 	}
 	.enter .add-column {
 		display: none;

@@ -1,4 +1,5 @@
 <script>
+	import { decks } from "../store.js";
 	import { currentUser } from "../store.js";
 	import { api } from "../store.js";
 
@@ -18,13 +19,23 @@
 			method: "POST",
 			body: JSON.stringify({
 				uid: $currentUser.uid,
-				did: deck,
+				did: deck.id,
 				title: formTitle,
 				content: formContent,
 			}),
 			headers: {
 				"Content-Type": "application/json",
 			},
+		});
+		// $decks[deck.arr].cards.push({
+		// 	id:
+		// })
+		const card = await res.json();
+		$decks[deck.arr].cards.push({
+			id: card.id,
+			title: formTitle,
+			content: formContent,
+			order: $decks[deck.arr].cards.length,
 		});
 		modalNewCard.set(false);
 	}
