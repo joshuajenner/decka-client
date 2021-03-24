@@ -98,7 +98,7 @@
 					</div>
 					<div class={colAdjs[index] == true ? "column-options open" : "column-options closed"}>
 						<div class="bubble">
-							<p>Properties</p>
+							<p class="options-title">Properties</p>
 						</div>
 						<div class="col-delete">
 							<button class="button-delete">Delete</button>
@@ -171,6 +171,9 @@
 	.columns {
 		padding: 16px;
 		display: flex;
+		align-items: flex-start;
+		width: 100%;
+		height: 100%;
 	}
 	.unselected {
 		display: none;
@@ -178,10 +181,16 @@
 	.column:first-of-type {
 		margin-left: 0px;
 	}
+	.column:last-of-type {
+		margin-right: 16px;
+	}
 	.column {
-		width: 338px;
+		min-width: 338px;
 		margin-left: 16px;
 		position: relative;
+	}
+	.column:hover > .column-title {
+		background-color: var(--hv-column);
 	}
 	.column-title {
 		background-color: var(--column);
@@ -197,7 +206,15 @@
 		background-color: var(--hv-column);
 	}
 	.column-adj {
-		height: 24px;
+		height: 26px;
+		border-radius: 50%;
+		padding: 2px;
+	}
+	.column-adj:hover {
+		background-color: var(--main-green);
+	}
+	.column-adj:hover svg {
+		stroke: var(--off-white);
 	}
 	.column-adj svg {
 		height: 100%;
@@ -216,10 +233,19 @@
 	.column-options {
 		position: absolute;
 		z-index: 5;
-		right: -96px;
+		left: calc(100% + 24px);
+		width: 192px;
+	}
+	.options-title {
+		border-bottom: 1px solid lightgrey;
+		padding-bottom: 4px;
+		margin-bottom: 8px;
 	}
 	.column-options .bubble {
-		background-color: var(--main-white);
+		background-color: var(--off-white);
+		padding: 8px;
+		margin-bottom: 8px;
+		width: 100%;
 	}
 	.column-options.open {
 		display: block;
