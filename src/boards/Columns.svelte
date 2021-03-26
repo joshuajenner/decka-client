@@ -1,8 +1,13 @@
 <script>
+	import { setDebugMode } from "svelte-dnd-action";
+	setDebugMode(true);
+
 	import { currentUser } from "../store.js";
 	import { api } from "../store.js";
 	import { decks } from "../store";
 
+	import { flip } from "svelte/animate";
+	import { dndzone, SHADOW_ITEM_MARKER_PROPERTY_NAME } from "svelte-dnd-action";
 	import { clickOutside } from "../functions/clickOutside.js";
 
 	import ColumnsDND from "./ColumnsDND.svelte";
@@ -13,6 +18,7 @@
 	export let boardI;
 	export let deckID;
 	export let deckArr;
+	const flipDurationMs = 200;
 	let colTitle;
 	let enterList = false;
 	let input;
@@ -77,37 +83,112 @@
 	function openAdj(ind) {
 		colAdjs[ind] = !colAdjs[ind];
 	}
+	async function renameColumn(id, i) {
+		const res = await fetch(`${$api}/renamecolumn`, {
+			method: "POST",
+			body: JSON.stringify({
+				uid: $currentUser.uid,
+				did: deckID,
+				bid: $selectedBoard.id,
+				cid: id,
+				title: $decks[deckArr].boards[boardI].columns[i].title,
+			}),
+			headers: {
+				"Content-Type": "application/json",
+			},
+		});
+	}
+	async function updateColumnCards(id, i) {
+		const res = await fetch(`${$api}/updatecolumncards`, {
+			method: "POST",
+			body: JSON.stringify({
+				uid: $currentUser.uid,
+				did: deckID,
+				bid: $selectedBoard.id,
+				cid: id,
+				cards: $decks[deckArr].boards[boardI].columns[i].cards,
+			}),
+			headers: {
+				"Content-Type": "application/json",
+			},
+		});
+	}
+	function transformDraggedElement(draggedEl, data, index) {
+		draggedEl.style.opacity = 0.7;
+	}
+	function handleDndConsiderColumns(e) {
+		$decks[deckArr].boards[boardI].columns = e.detail.items;
+	}
+	function handleDndFinalizeColumns(e) {
+		$decks[deckArr].boards[boardI].columns = e.detail.items;
+	}
+	function handleSort(ci, cid, e) {
+		$decks[deckArr].boards[boardI].columns[ci].cards = e.detail.items;
+	}
+	function handleFinalize(ci, cid, e) {
+		updateColumnCards(cid, ci);
+		$decks[deckArr].boards[boardI].columns[ci].cards = e.detail.items;
+	}
 	getColumns();
 </script>
 
 <div class={$selectedBoard.id === boardID ? "columns" : "unselected"}>
 	{#if columnsLoaded}
-		{#each $decks[deckArr].boards[boardI].columns as column, index}
-			<div class="column">
-				<div class="column-title">
-					<h5>{column.title}</h5>
-					<div on:click={() => openAdj(index)} class="column-adj">
-						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="slategrey">
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"
-							/>
-						</svg>
-					</div>
-					<div class={colAdjs[index] == true ? "column-options open" : "column-options closed"}>
-						<div class="bubble">
+		<section
+			class="columns-dnd"
+			use:dndzone={{ items: $decks[deckArr].boards[boardI].columns, flipDurationMs, type: "columns" }}
+			on:consider={handleDndConsiderColumns}
+			on:finalize={handleDndFinalizeColumns}
+		>
+			{#each $decks[deckArr].boards[boardI].columns as column, index (column.order)}
+				<div class="column" animate:flip={{ duration: flipDurationMs }}>
+					<div class="column-title">
+						<form method="post" on:submit|preventDefault={renameColumn(column.id, index)}>
+							<input type="text" name="colTitle" bind:value={column.title} on:blur={renameColumn(column.id, index)} />
+						</form>
+						<div on:click={() => openAdj(index)} class="column-adj">
+							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="slategrey">
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"
+								/>
+							</svg>
+						</div>
+						<div class={colAdjs[index] == true ? "column-options open" : "column-options closed"}>
+							<!-- <div class="bubble">
 							<p class="options-title">Properties</p>
-						</div>
-						<div class="col-delete">
-							<button class="button-delete">Delete</button>
+						</div> -->
+							<div class="col-delete">
+								<button class="button-delete">Delete</button>
+							</div>
 						</div>
 					</div>
+					<!-- <ColumnsDND di={deckArr} bi={boardI} cid={column.id} /> -->
+					<section
+						class="column-body"
+						use:dndzone={{ items: column.cards, flipDurationMs, transformDraggedElement, type: "cards" }}
+						on:consider={(e) => handleSort(index, column.id, e)}
+						on:finalize={(e) => handleFinalize(index, column.id, e)}
+					>
+						{#each column.cards as card (card.order)}
+							<div id={card.id} class="card" animate:flip={{ duration: flipDurationMs }}>
+								<div class="card-title lato">
+									<p>{card.title}</p>
+								</div>
+								<div class="card-body">
+									<p>{card.content}</p>
+								</div>
+								{#if card[SHADOW_ITEM_MARKER_PROPERTY_NAME]}
+									<div class="custom-shadow-item">{card.title}</div>
+								{/if}
+							</div>
+						{/each}
+					</section>
 				</div>
-				<ColumnsDND di={deckArr} bi={boardI} cid={column.id} />
-			</div>
-		{/each}
+			{/each}
+		</section>
 	{/if}
 
 	<div class="column">
@@ -136,23 +217,6 @@
 </div>
 
 <style>
-	.card {
-		border-radius: 12px;
-		border: 1px solid lightgrey;
-		padding: 8px 16px;
-		background-color: var(--off-white);
-		position: relative;
-		cursor: pointer;
-	}
-	.card:hover {
-		border-color: black;
-	}
-	.card-title {
-		font-weight: bold;
-		margin-bottom: 16px;
-		padding: 8px 0px 4px 0px;
-		border-bottom: 1px solid lightgrey;
-	}
 	/* .custom-shadow-item {
 		position: absolute;
 		top: 0;
@@ -174,6 +238,28 @@
 		align-items: flex-start;
 		width: 100%;
 		height: 100%;
+	}
+	.columns-dnd {
+		display: flex;
+		align-items: flex-start;
+		height: 100%;
+	}
+	.columns-dnd:focus {
+		outline: 0px;
+	}
+	.column-title form {
+		padding: 0px;
+		margin-right: 4px;
+	}
+	.column-title input {
+		background-color: transparent;
+		font-family: "Recursive";
+		font-size: 1.25em;
+		padding: 4px;
+	}
+	.column-title input:focus {
+		outline: 0px;
+		background-color: var(--light);
 	}
 	.unselected {
 		display: none;
@@ -198,12 +284,56 @@
 		border-top-right-radius: 16px;
 		height: 60px;
 		transition: height 0.2s;
-		padding: 16px;
+		padding: 12px;
 		display: flex;
 		justify-content: space-between;
+		align-items: center;
 	}
 	.column-title:hover {
 		background-color: var(--hv-column);
+	}
+	.column-body {
+		border-bottom-left-radius: 16px;
+		border-bottom-right-radius: 16px;
+		background-color: var(--column);
+		padding: 16px;
+		min-height: 64px;
+	}
+	.column-body:hover {
+		background-color: var(--hv-column);
+	}
+	.card {
+		border-radius: 12px;
+		border: 1px solid lightgrey;
+		padding: 8px 16px;
+		background-color: var(--off-white);
+		position: relative;
+		cursor: pointer;
+		margin-bottom: 8px;
+	}
+	.card:hover {
+		border-color: black;
+	}
+	.card-title {
+		font-weight: bold;
+		padding: 4px 0px 8px 0px;
+		border-bottom: 1px solid lightgray;
+		margin-bottom: 8px;
+		font-weight: bold;
+	}
+	.custom-shadow-item {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		visibility: visible;
+		background: var(--main-green);
+		opacity: 0.5;
+		margin: 0;
+		border-radius: 12px;
+		border: 1px solid lightgrey;
+		padding: 8px 16px;
 	}
 	.column-adj {
 		height: 26px;

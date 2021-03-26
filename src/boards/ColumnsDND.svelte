@@ -21,7 +21,7 @@
 	ci = $decks[di].boards[bi].columns.findIndex((c) => c.id === cid);
 </script>
 
-<section class="column-body" use:dndzone={{ items: $decks[di].boards[bi].columns[ci].cards, flipDurationMs, transformDraggedElement }} on:consider={handleSort} on:finalize={handleSort}>
+<section class="column-body" use:dndzone={{ items: $decks[di].boards[bi].columns[ci].cards, flipDurationMs, transformDraggedElement, type: "cards" }} on:consider={handleSort} on:finalize={handleSort}>
 	{#each $decks[di].boards[bi].columns[ci].cards as card (card.order)}
 		<div id={card.id} class="card" animate:flip={{ duration: flipDurationMs }}>
 			<div class="card-title lato">
@@ -55,8 +55,13 @@
 		background-color: var(--off-white);
 		position: relative;
 		cursor: pointer;
+		margin-bottom: 8px;
+	}
+	.card:hover {
+		border-color: black;
 	}
 	.card-title {
+		font-weight: bold;
 		padding: 4px 0px 8px 0px;
 		border-bottom: 1px solid lightgray;
 		margin-bottom: 8px;

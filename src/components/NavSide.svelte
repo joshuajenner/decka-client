@@ -47,6 +47,7 @@
 		position: relative;
 		z-index: 5;
 		width: 60px;
+		min-width: 60px;
 		background-color: var(--off-white);
 		border-right: 1px solid lightgrey;
 		display: flex;

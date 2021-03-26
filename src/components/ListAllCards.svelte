@@ -1,6 +1,8 @@
 <script>
 	import { updateCards } from "../store.js";
+	import { currentUser } from "../store.js";
 	import { decks } from "../store";
+	import { api } from "../store.js";
 
 	import { flip } from "svelte/animate";
 	import { fly } from "svelte/transition";
@@ -12,6 +14,20 @@
 
 	export let arr;
 	const flipDurationMs = 200;
+
+	async function updateAllCards() {
+		const res = await fetch(`${$api}/updateallcards`, {
+			method: "POST",
+			body: JSON.stringify({
+				uid: $currentUser.uid,
+				did: $decks[arr].id,
+				cards: $decks[arr].cards,
+			}),
+			headers: {
+				"Content-Type": "application/json",
+			},
+		});
+	}
 
 	function openNewCardModal() {
 		modalNewCard.set(true);
@@ -30,6 +46,10 @@
 	function handleSort(e) {
 		$decks[arr].cards = e.detail.items;
 		console.log(e);
+	}
+	function finalizeDND(e) {
+		$decks[arr].cards = e.detail.items;
+		updateAllCards();
 	}
 	function transformDraggedElement(draggedEl, data, index) {
 		draggedEl.style.opacity = 0.7;
@@ -62,7 +82,7 @@
 				{#if $decks[arr].cards.length == 0}
 					<p class="lato">No Cards to display.</p>
 				{/if}
-				<section use:dndzone={{ items: $decks[arr].cards, flipDurationMs, transformDraggedElement }} on:consider={handleSort} on:finalize={handleSort}>
+				<section id="all-cards-dnd" use:dndzone={{ items: $decks[arr].cards, flipDurationMs, transformDraggedElement, type: "cards" }} on:consider={handleSort} on:finalize={finalizeDND}>
 					{#each $decks[arr].cards as item (item.order)}
 						<div
 							id={item.id}
@@ -97,7 +117,7 @@
 		width: 340px !important;
 		z-index: 1;
 		background-color: var(--less-white);
-		height: 100%;
+		height: calc(100vh - 57px);
 		display: flex;
 		flex-direction: column;
 	}
@@ -128,8 +148,12 @@
 	}
 	#all-cards {
 		padding: 8px;
+		height: 100%;
+	}
+	#all-cards-dnd {
 		overflow-y: scroll;
 		height: 100%;
+		padding: 8px 8px 96px 8px;
 	}
 	.card {
 		border-radius: 12px;
