@@ -1,6 +1,8 @@
 <script>
+	import { decks } from "../store.js";
 	import { currentUser } from "../store.js";
 	import { api } from "../store.js";
+	import { selectedBoard } from "../store.js";
 	import { modalNewBoard } from "../store";
 
 	export let deckID;
@@ -20,7 +22,13 @@
 				"Content-Type": "application/json",
 			},
 		});
-		const allData = await res;
+		const allData = await res.json();
+		$decks[$decks.findIndex((deck) => deck.id === deckID)].boards.push(allData);
+		selectedBoard.set({
+			id: allData.id,
+			i: 0,
+		});
+		decks.set($decks);
 		setClose();
 	}
 	function setClose() {

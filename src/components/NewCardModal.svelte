@@ -22,7 +22,8 @@
 				did: deck.id,
 				title: formTitle,
 				content: formContent,
-				order: Math.floor(Math.random() * 90000) + 10000,
+				order: 0,
+				dnd: Math.floor(Math.random() * 90000) + 10000,
 			}),
 			headers: {
 				"Content-Type": "application/json",
@@ -36,7 +37,8 @@
 			id: card.id,
 			title: formTitle,
 			content: formContent,
-			order: Math.floor(Math.random() * 90000) + 10000,
+			dnd: Math.floor(Math.random() * 90000) + 10000,
+			order: 0,
 		});
 		decks.set($decks);
 		modalNewCard.set(false);

@@ -1,4 +1,5 @@
 <script>
+	import { decks } from "../store.js";
 	import { currentUser } from "../store.js";
 	import { api } from "../store.js";
 
@@ -21,6 +22,15 @@
 				"Content-Type": "application/json",
 			},
 		});
+		const deck = await res.json();
+		$decks.push({
+			data: { title: formTitle },
+			id: deck.id,
+			cards: [],
+			boards: [],
+		});
+		decks.set($decks);
+		console.log($decks);
 		modalNewDeck.set(false);
 	}
 </script>

@@ -83,7 +83,7 @@
 					<p class="lato">No Cards to display.</p>
 				{/if}
 				<section id="all-cards-dnd" use:dndzone={{ items: $decks[arr].cards, flipDurationMs, transformDraggedElement, type: "cards" }} on:consider={handleSort} on:finalize={finalizeDND}>
-					{#each $decks[arr].cards as item (item.order)}
+					{#each $decks[arr].cards as item (item.dnd)}
 						<div
 							id={item.id}
 							class="card"

@@ -1,7 +1,4 @@
 <script>
-	import { setDebugMode } from "svelte-dnd-action";
-	setDebugMode(true);
-
 	import { currentUser } from "../store.js";
 	import { api } from "../store.js";
 	import { decks } from "../store";
@@ -9,8 +6,6 @@
 	import { flip } from "svelte/animate";
 	import { dndzone, SHADOW_ITEM_MARKER_PROPERTY_NAME } from "svelte-dnd-action";
 	import { clickOutside } from "../functions/clickOutside.js";
-
-	import ColumnsDND from "./ColumnsDND.svelte";
 
 	import { selectedBoard } from "../store";
 
@@ -24,6 +19,8 @@
 	let input;
 	let columnsLoaded = false;
 	let colAdjs = [];
+	let keepCards = true;
+	let displayDelete = false;
 
 	// let newOrder = $decks[deckArr].board[boardI].columns.length + 1;
 	// let newOrder = $decks[deckArr].boards.length + 1;
@@ -51,6 +48,7 @@
 		columnsLoaded = true;
 	}
 	async function newColumn() {
+		let dndID = Math.floor(Math.random() * 90000) + 10000;
 		const res = await fetch(`${$api}/newcolumn`, {
 			method: "POST",
 			body: JSON.stringify({
@@ -58,16 +56,23 @@
 				did: deckID,
 				bid: $selectedBoard.id,
 				title: colTitle,
-				order: $decks[deckArr].boards[boardI].columns.length,
+				dnd: dndID,
+				order: $decks[deckArr].boards[boardI].columns.length + 10,
 			}),
 			headers: {
 				"Content-Type": "application/json",
 			},
 		});
+		let colID = await res.json();
 		$decks[deckArr].boards[boardI].columns.push({
+			id: colID.id,
 			title: colTitle,
-			order: $decks[deckArr].boards[boardI].columns.length,
+			order: $decks[deckArr].boards[boardI].columns.length + 10,
+			cards: [],
+			dnd: dndID,
 		});
+		console.log(colID.id);
+		$decks[deckArr].boards[boardI].columns = $decks[deckArr].boards[boardI].columns;
 		decks.set($decks);
 		closeInput();
 	}
@@ -98,6 +103,21 @@
 			},
 		});
 	}
+	async function deleteColumn(id) {
+		const res = await fetch(`${$api}/deletecolumn`, {
+			method: "POST",
+			body: JSON.stringify({
+				uid: $currentUser.uid,
+				did: deckID,
+				bid: $selectedBoard.id,
+				cid: id,
+				keepCards: keepCards,
+			}),
+			headers: {
+				"Content-Type": "application/json",
+			},
+		});
+	}
 	async function updateColumnCards(id, i) {
 		const res = await fetch(`${$api}/updatecolumncards`, {
 			method: "POST",
@@ -113,6 +133,21 @@
 			},
 		});
 	}
+	async function reorderColumns() {
+		const res = await fetch(`${$api}/reordercolumns`, {
+			method: "POST",
+			body: JSON.stringify({
+				uid: $currentUser.uid,
+				did: deckID,
+				bid: $selectedBoard.id,
+				cols: $decks[deckArr].boards[boardI].columns,
+			}),
+			headers: {
+				"Content-Type": "application/json",
+			},
+		});
+		console.log("re'd");
+	}
 	function transformDraggedElement(draggedEl, data, index) {
 		draggedEl.style.opacity = 0.7;
 	}
@@ -121,6 +156,7 @@
 	}
 	function handleDndFinalizeColumns(e) {
 		$decks[deckArr].boards[boardI].columns = e.detail.items;
+		reorderColumns();
 	}
 	function handleSort(ci, cid, e) {
 		$decks[deckArr].boards[boardI].columns[ci].cards = e.detail.items;
@@ -140,7 +176,7 @@
 			on:consider={handleDndConsiderColumns}
 			on:finalize={handleDndFinalizeColumns}
 		>
-			{#each $decks[deckArr].boards[boardI].columns as column, index (column.order)}
+			{#each $decks[deckArr].boards[boardI].columns as column, index (column.dnd)}
 				<div class="column" animate:flip={{ duration: flipDurationMs }}>
 					<div class="column-title">
 						<form method="post" on:submit|preventDefault={renameColumn(column.id, index)}>
@@ -165,14 +201,13 @@
 							</div>
 						</div>
 					</div>
-					<!-- <ColumnsDND di={deckArr} bi={boardI} cid={column.id} /> -->
 					<section
 						class="column-body"
 						use:dndzone={{ items: column.cards, flipDurationMs, transformDraggedElement, type: "cards" }}
 						on:consider={(e) => handleSort(index, column.id, e)}
 						on:finalize={(e) => handleFinalize(index, column.id, e)}
 					>
-						{#each column.cards as card (card.order)}
+						{#each column.cards as card (card.dnd)}
 							<div id={card.id} class="card" animate:flip={{ duration: flipDurationMs }}>
 								<div class="card-title lato">
 									<p>{card.title}</p>
@@ -214,9 +249,27 @@
 			</form>
 		</div>
 	</div>
+	<div class={displayDelete == true ? "del-mdl" : "del-mdl closed"}>
+		<div class="blackout" />
+		<div class="modal">
+			<form method="post" on:submit|preventDefault={deleteColumn}>
+				<p>Would you like to move the cards in the column?</p>
+				<label>
+					<input type="checkbox" bind:checked={keepCards} />
+					Yes, please keep the cards.
+				</label>
+			</form>
+		</div>
+	</div>
 </div>
 
 <style>
+	.del-mdl {
+		position: absolute;
+	}
+	.del-mdl.closed {
+		display: none;
+	}
 	/* .custom-shadow-item {
 		position: absolute;
 		top: 0;
@@ -243,6 +296,7 @@
 		display: flex;
 		align-items: flex-start;
 		height: 100%;
+		max-height: 900px;
 	}
 	.columns-dnd:focus {
 		outline: 0px;
@@ -275,7 +329,11 @@
 		margin-left: 16px;
 		position: relative;
 	}
-	.column:hover > .column-title {
+	.column:focus {
+		outline: 0px;
+	}
+	.column:hover > .column-title,
+	.column:hover .column-body {
 		background-color: var(--hv-column);
 	}
 	.column-title {
@@ -284,7 +342,7 @@
 		border-top-right-radius: 16px;
 		height: 60px;
 		transition: height 0.2s;
-		padding: 12px;
+		padding: 24px 12px 12px 12px;
 		display: flex;
 		justify-content: space-between;
 		align-items: center;

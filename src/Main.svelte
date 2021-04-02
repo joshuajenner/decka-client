@@ -72,11 +72,15 @@
 			},
 		});
 		const allData = await res.json();
-		$decks[$decks.findIndex((deck) => deck.id === deckID)].boards = allData;
-		selectedBoard.set({
-			id: allData[0].id,
-			i: 0,
-		});
+		if (allData.length > 0) {
+			$decks[$decks.findIndex((deck) => deck.id === deckID)].boards = allData;
+			selectedBoard.set({
+				id: allData[0].id,
+				i: 0,
+			});
+		} else {
+			$decks[$decks.findIndex((deck) => deck.id === deckID)].boards = [];
+		}
 		boardsLoaded[selectedDeck.arr] = true;
 		decks.set($decks);
 	}
@@ -213,7 +217,7 @@
 	</div>
 	<NewCardModal bind:deck={selectedDeck} />
 	<NewBoardModal bind:deckID={selectedDeck.id} />
-	<UpdateDeckModal bind:deck={modalDeck} />
+	<UpdateDeckModal bind:deck={modalDeck} bind:select={selectedDeck} bind:boards={boardsLoaded} />
 	<NewDeckModal />
 </main>
 

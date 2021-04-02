@@ -1,4 +1,5 @@
 <script>
+	import { decks } from "../store.js";
 	import { currentUser } from "../store.js";
 	import { api } from "../store.js";
 
@@ -6,6 +7,8 @@
 
 	// id, title, content
 	export let deck = {};
+	export let select;
+	export let boards;
 
 	let formTitle = deck.title;
 	let confirm = "";
@@ -31,7 +34,7 @@
 
 	async function deleteDeck() {
 		if (confirm === deck.title) {
-			console.log("reached");
+			console.log(boards);
 			const res = await fetch(`${$api}/deletedeck`, {
 				method: "POST",
 				body: JSON.stringify({
@@ -42,6 +45,22 @@
 					"Content-Type": "application/json",
 				},
 			});
+			if (select.arr == $decks.findIndex((d) => d.id === deck.id)) {
+				select = {
+					arr: -1,
+					title: "",
+					id: "",
+				};
+			}
+			boards.splice(
+				$decks.findIndex((d) => d.id === deck.id),
+				1
+			);
+			$decks.splice(
+				$decks.findIndex((d) => d.id === deck.id),
+				1
+			);
+			decks.set($decks);
 			modalUpdateDeck.set(false);
 		}
 	}

@@ -6,7 +6,7 @@
 	import { fb } from "./store.js";
 	import { db } from "./store.js";
 	import { overrideItemIdKeyNameBeforeInitialisingDndZones } from "svelte-dnd-action";
-	overrideItemIdKeyNameBeforeInitialisingDndZones("order");
+	overrideItemIdKeyNameBeforeInitialisingDndZones("dnd");
 
 	import firebase from "firebase/app";
 	import "firebase/auth";
