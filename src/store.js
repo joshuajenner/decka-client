@@ -8,8 +8,9 @@ export const currentUser = writable({
     uid: ""
 });
 
+// prod is https://decka-heroku.herokuapp.com/
 // local is http://127.0.0.1:3000
-export const api = readable("http://127.0.0.1:3000")
+export const api = readable("https://decka-heroku.herokuapp.com/")
 
 export const fb = writable();
 export const db = writable();
