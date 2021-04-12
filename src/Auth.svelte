@@ -11,16 +11,18 @@
 		if (givenEmail === "" || givenPass === "") {
 			errorMessage = "Please fill in all fields.";
 		} else {
-			$fb
-				.auth()
+			$fb.auth()
 				.signInWithEmailAndPassword(givenEmail, givenPass)
 				.then((userCredential) => {
-					var user = userCredential.user;
+					var u = userCredential.user;
+					var res = givenEmail.split("@");
 					currentUser.set({
 						loggedIn: true,
-						uid: user.uid,
+						uid: u.uid,
+						name: res[0],
+						user: u,
 					});
-					console.log($currentUser.uid);
+					console.log($currentUser.user);
 				})
 				.catch((error) => {
 					var errorCode = error.code;
@@ -41,14 +43,16 @@
 		if (givenEmail === "" || givenPass === "") {
 			errorMessage = "Please fill in all fields.";
 		} else {
-			$fb
-				.auth()
+			$fb.auth()
 				.createUserWithEmailAndPassword(givenEmail, givenPass)
 				.then((userCredential) => {
-					var user = userCredential.user;
+					var u = userCredential.user;
+					var res = givenEmail.split("@");
 					currentUser.set({
 						loggedIn: true,
-						uid: user.uid,
+						uid: u.uid,
+						name: res[0],
+						user: u,
 					});
 					initNewUserDB();
 				})
@@ -79,25 +83,11 @@
 				<h1>LOGIN</h1>
 				<hr />
 				<label for="loginUser">Email</label>
-				<input
-					type="text"
-					id="loginUser"
-					name="loginUser"
-					class="text-input"
-					bind:value={givenEmail}
-				/>
+				<input type="text" id="loginUser" name="loginUser" class="text-input" bind:value={givenEmail} />
 				<label for="loginPass">Password</label>
-				<input
-					type="password"
-					id="loginPass"
-					name="loginPass"
-					class="text-input"
-					bind:value={givenPass}
-				/>
+				<input type="password" id="loginPass" name="loginPass" class="text-input" bind:value={givenPass} />
 				<button type="button" on:click={handleLogin}>Login</button>
-				<p class="switch" on:click={() => (current = "signup")}>
-					I don't have an account. Signup.
-				</p>
+				<p class="switch" on:click={() => (current = "signup")}>I don't have an account. Signup.</p>
 				<p>{errorMessage}</p>
 			</div>
 		</form>
@@ -107,25 +97,11 @@
 				<h1>SIGNUP</h1>
 				<hr />
 				<label for="signUser">Email</label>
-				<input
-					type="text"
-					id="signUser"
-					name="signUser"
-					class="text-input"
-					bind:value={givenEmail}
-				/>
+				<input type="text" id="signUser" name="signUser" class="text-input" bind:value={givenEmail} />
 				<label for="signPass">Password</label>
-				<input
-					type="password"
-					id="signPass"
-					name="signPass"
-					class="text-input"
-					bind:value={givenPass}
-				/>
+				<input type="password" id="signPass" name="signPass" class="text-input" bind:value={givenPass} />
 				<button type="button" on:click={handleSignup}>Signup</button>
-				<p class="switch" on:click={() => (current = "login")}>
-					I already have an account. Login.
-				</p>
+				<p class="switch" on:click={() => (current = "login")}>I already have an account. Login.</p>
 				<p>{errorMessage}</p>
 			</div>
 		</form>
