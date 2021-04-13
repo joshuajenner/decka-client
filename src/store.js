@@ -20,6 +20,7 @@ export const db = writable();
 
 export const decks = writable([]);
 export const updateCards = writable([]);
+export const updateCardsSource = writable([]);
 export const selectedBoard = writable({});
 
 export const listAny = writable(true);

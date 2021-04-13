@@ -199,7 +199,7 @@
 					<ListAllCards bind:arr={selectedDeck.arr} bind:items={tempCards} />
 				{/if}
 			</div>
-			<UpdateCardModal />
+			<UpdateCardModal bind:arr={selectedDeck.arr} />
 		</div>
 		<div id="board">
 			{#if selectedDeck.arr != -1}

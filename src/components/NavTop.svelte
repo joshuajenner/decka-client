@@ -134,6 +134,14 @@
 									</svg>
 								{/if}
 								{board.title}
+								<svg class="board-options" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+									/>
+								</svg>
 							</li>
 						{/each}
 					{/if}
@@ -415,6 +423,18 @@
 	}
 	.board-item.selected {
 		color: inherit;
+	}
+	.board-options {
+		display: none;
+		stroke: rgba(255, 255, 255, 0.5);
+		margin-left: 4px;
+		margin-bottom: 0px !important;
+	}
+	.board-options:hover {
+		stroke: var(--off-white);
+	}
+	.board-item.selected .board-options {
+		display: block;
 	}
 	.board-item.selected::after {
 		height: 6px;

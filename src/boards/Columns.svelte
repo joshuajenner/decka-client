@@ -21,6 +21,12 @@
 	let colAdjs = [];
 	let keepCards = true;
 	let displayDelete = false;
+	let updateModal = false;
+	let modalTitle = "";
+	let modalContent = "";
+	let modalColID = 0;
+	let modalColI = 0;
+	let modalCardID = "";
 
 	// let newOrder = $decks[deckArr].board[boardI].columns.length + 1;
 	// let newOrder = $decks[deckArr].boards.length + 1;
@@ -103,7 +109,7 @@
 			},
 		});
 	}
-	async function deleteColumn(id) {
+	async function deleteColumn(id, i) {
 		const res = await fetch(`${$api}/deletecolumn`, {
 			method: "POST",
 			body: JSON.stringify({
@@ -111,12 +117,17 @@
 				did: deckID,
 				bid: $selectedBoard.id,
 				cid: id,
-				keepCards: keepCards,
 			}),
 			headers: {
 				"Content-Type": "application/json",
 			},
 		});
+		// let card = 0;
+		// for (card in $decks[deckArr].boards[boardI].columns[i].cards) {
+		// 	$decks[deckArr].cards.push($decks[deckArr].boards[boardI].columns[i].cards[card]);
+		// }
+		$decks[deckArr].boards[boardI].columns.splice(i, 1);
+		decks.set($decks);
 	}
 	async function updateColumnCards(id, i) {
 		const res = await fetch(`${$api}/updatecolumncards`, {
@@ -147,6 +158,33 @@
 			},
 		});
 		console.log("re'd");
+	}
+	function updateCard() {
+		let tempIndex = $decks[deckArr].boards[boardI].columns[modalColI].cards.findIndex((x) => x.id === modalCardID);
+		$decks[deckArr].boards[boardI].columns[modalColI].cards[tempIndex].title = modalTitle;
+		$decks[deckArr].boards[boardI].columns[modalColI].cards[tempIndex].content = modalContent;
+		decks.set($decks);
+		closeModal();
+		updateColumnCards(modalColID, modalColI);
+	}
+
+	function deleteCard() {
+		$decks[deckArr].boards[boardI].columns[modalColI].cards.splice($decks[deckArr].boards[boardI].columns[modalColI].cards.indexOf(modalCardID), 1);
+		decks.set($decks);
+		closeModal();
+		updateColumnCards(modalColID, modalColI);
+	}
+
+	function openUpdate(colID, colI, cardID, title, content) {
+		updateModal = true;
+		modalTitle = title;
+		modalContent = content;
+		modalColID = colID;
+		modalColI = colI;
+		modalCardID = cardID;
+	}
+	function closeModal() {
+		updateModal = false;
 	}
 	function transformDraggedElement(draggedEl, data, index) {
 		draggedEl.style.opacity = 0.7;
@@ -194,9 +232,9 @@
 						</div>
 						<div class={colAdjs[index] == true ? "column-options open" : "column-options closed"}>
 							<!-- <div class="bubble">
-							<p class="options-title">Properties</p>
-						</div> -->
-							<div class="col-delete">
+								<p class="options-title">Properties</p>
+							</div> -->
+							<div on:click={deleteColumn(column.id, index)} class="col-delete">
 								<button class="button-delete">Delete</button>
 							</div>
 						</div>
@@ -208,7 +246,7 @@
 						on:finalize={(e) => handleFinalize(index, column.id, e)}
 					>
 						{#each column.cards as card (card.dnd)}
-							<div id={card.id} class="card" animate:flip={{ duration: flipDurationMs }}>
+							<div on:click={openUpdate(column.id, index, card.id, card.title, card.content)} id={card.id} class="card" animate:flip={{ duration: flipDurationMs }}>
 								<div class="card-title lato">
 									<p>{card.title}</p>
 								</div>
@@ -249,7 +287,7 @@
 			</form>
 		</div>
 	</div>
-	<div class={displayDelete == true ? "del-mdl" : "del-mdl closed"}>
+	<!-- <div class={displayDelete == true ? "del-mdl" : "del-mdl closed"}>
 		<div class="blackout" />
 		<div class="modal">
 			<form method="post" on:submit|preventDefault={deleteColumn}>
@@ -260,15 +298,100 @@
 				</label>
 			</form>
 		</div>
+	</div> -->
+</div>
+<div class={updateModal ? "columns-modal" : "modal-closed"}>
+	<div use:clickOutside on:click_outside={closeModal} class="update-card">
+		<form on:submit|preventDefault={updateCard}>
+			<div class="update-title">
+				<input name="title" type="text" bind:value={modalTitle} />
+			</div>
+			<div class="update-content">
+				<textarea name="cotent" bind:value={modalContent} />
+			</div>
+			<button class="button" type="submit">Update</button>
+		</form>
+		<button on:click={deleteCard} class="button-delete">Delete</button>
 	</div>
 </div>
 
 <style>
-	.del-mdl {
-		position: absolute;
-	}
-	.del-mdl.closed {
+	.modal-closed {
 		display: none;
+	}
+	.columns-modal {
+		padding: 16px;
+		display: flex;
+		position: absolute;
+		top: 0px;
+		left: 0px;
+		z-index: 15;
+		height: 100vh;
+		width: 100vw;
+		background-color: rgba(0, 0, 0, 0.3);
+		justify-content: center;
+		align-items: flex-start;
+	}
+	form {
+		position: relative;
+	}
+	.update-card {
+		border-radius: 12px;
+		border: 1px solid lightgrey;
+		padding: 8px 16px 16px 16px;
+		min-height: 240px;
+		max-height: 360px;
+		width: 300px;
+		background-color: var(--off-white);
+		margin-left: 8px;
+		margin-top: 32px;
+		position: relative;
+	}
+	.update-card:first-of-type {
+		margin-left: 0px;
+	}
+	input {
+		border: 0px;
+		background-color: none;
+		font-size: 1em;
+		width: 100%;
+	}
+	input:focus {
+		outline: 0px;
+		background-color: var(--hv-white);
+	}
+	.update-content {
+		height: 240px;
+	}
+	.update-title {
+		margin-bottom: 16px;
+		padding: 8px 0px 4px 0px;
+		border-bottom: 1px solid lightgrey;
+	}
+	.update-title input {
+		font-family: Lato;
+		font-weight: bold;
+	}
+	button {
+		margin-top: 24px;
+		font-size: 1em;
+		background-color: var(--main-green);
+		padding: 8px;
+		border: 0px;
+		color: white;
+		border-radius: 4px;
+		cursor: pointer;
+		position: absolute;
+		bottom: 0px;
+		right: 0px;
+	}
+	button:hover {
+		background-color: var(--hv-green);
+	}
+	.button-delete {
+		position: absolute;
+		bottom: -11px;
+		right: 96px;
 	}
 	/* .custom-shadow-item {
 		position: absolute;
@@ -421,7 +544,7 @@
 	.column-options {
 		position: absolute;
 		z-index: 5;
-		left: calc(100% + 24px);
+		left: calc(100%);
 		width: 192px;
 	}
 	.options-title {
@@ -463,11 +586,11 @@
 	.enter .add-title {
 		display: none;
 	}
-	form {
+	.columns-modal form {
 		padding: 16px;
 		width: 100%;
 	}
-	input {
+	.columns-modal input {
 		width: 100%;
 		padding: 8px;
 		font-family: Roboto;
@@ -476,23 +599,23 @@
 		border-radius: 4px;
 		background-color: var(--less-white);
 	}
-	.input-buttons {
+	.columns-modal .input-buttons {
 		display: flex;
 		align-items: center;
 		margin-top: 8px;
 	}
-	.close-box:hover svg {
+	.columns-modal .close-box:hover svg {
 		stroke: black;
 	}
-	.close-box svg {
+	.columns-modal .close-box svg {
 		height: 100%;
 	}
-	.close-box {
+	.columns-modal .close-box {
 		height: 32px;
 		cursor: pointer;
 		margin-left: 8px;
 	}
-	button {
+	.columns-modal button {
 		font-size: 0.8em;
 		background-color: var(--main-green);
 		padding: 8px 16px;
@@ -501,7 +624,7 @@
 		border-radius: 4px;
 		cursor: pointer;
 	}
-	button:hover {
+	.columns-modal button:hover {
 		background-color: var(--hv-green);
 	}
 </style>

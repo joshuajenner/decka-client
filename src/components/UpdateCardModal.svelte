@@ -1,9 +1,11 @@
 <script>
-	import { currentUser } from "../store.js";
+	import { currentUser, decks } from "../store.js";
 	import { api } from "../store.js";
 	import { updateCards } from "../store.js";
 
 	import { clickOutside } from "../functions/clickOutside.js";
+
+	export let arr;
 
 	async function updateCard(did, id, title, content) {
 		const res = await fetch(`${$api}/updatecard`, {
@@ -43,6 +45,11 @@
 			1
 		);
 		updateCards.set($updateCards);
+		$decks[arr].cards.splice(
+			$decks[arr].cards.findIndex((card) => card.id == cid),
+			1
+		);
+		decks.set($decks);
 	}
 
 	function closeAllCards() {
@@ -73,6 +80,15 @@
 	#update-card-box {
 		padding: 16px;
 		display: flex;
+		position: absolute;
+		top: 0px;
+		left: 0px;
+		z-index: 15;
+		height: 100vh;
+		width: 100vw;
+		background-color: rgba(0, 0, 0, 0.3);
+		justify-content: center;
+		align-items: flex-start;
 	}
 	form {
 		height: 100%;
@@ -87,6 +103,7 @@
 		width: 300px;
 		background-color: var(--off-white);
 		margin-left: 8px;
+		margin-top: 32px;
 		position: relative;
 	}
 	.update-card:first-of-type {
@@ -101,6 +118,9 @@
 	input:focus {
 		outline: 0px;
 		background-color: var(--hv-white);
+	}
+	.update-content {
+		height: 240px;
 	}
 	.update-title {
 		margin-bottom: 16px;
