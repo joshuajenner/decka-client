@@ -17,8 +17,15 @@
 	export let boardStatus;
 
 	let menuOpen = false;
-	let optionsOpen = false;
+	let userOptions = false;
+	let boardOptions = false;
+	let blackoutOpen = false;
 	let userConfirm = "";
+	let modalID = "";
+	let modalTitle = "";
+	let modalConfirm = "";
+	let modalIndex;
+	let confirm = true;
 
 	function checkListsOpen() {
 		if ($listDecks || $listCards) {
@@ -45,16 +52,29 @@
 		modalNewBoard.set(true);
 	}
 	function selectBoard(b) {
+		console.log(b);
 		selectedBoard.set(b);
 	}
 	function openMenu() {
 		menuOpen = !menuOpen;
 	}
-	function openOptions() {
-		optionsOpen = true;
+	function openUserOptions() {
+		userOptions = true;
+		blackoutOpen = true;
+		confirm = true;
 	}
-	function closeOptions() {
-		optionsOpen = false;
+	function openBoardOptions(id, title, index) {
+		boardOptions = true;
+		blackoutOpen = true;
+		confirm = true;
+		modalTitle = title;
+		modalID = id;
+		modalIndex = index;
+	}
+	function closeModals() {
+		userOptions = false;
+		boardOptions = false;
+		blackoutOpen = false;
 	}
 	function logout() {
 		currentUser.set({
@@ -82,6 +102,46 @@
 					"Content-Type": "application/json",
 				},
 			});
+		} else {
+			confirm = false;
+		}
+	}
+	async function updateBoard() {
+		// let bi = $decks[navDeck.arr].boards.findIndex((x) => x.id === modalID);
+		$decks[navDeck.arr].boards[modalIndex].title = modalTitle;
+		decks.set($decks);
+		closeModals();
+		const res = await fetch(`${$api}/updateboard`, {
+			method: "POST",
+			body: JSON.stringify({
+				uid: $currentUser.uid,
+				did: $decks[navDeck.arr].id,
+				bid: modalID,
+				title: modalTitle,
+			}),
+			headers: {
+				"Content-Type": "application/json",
+			},
+		});
+	}
+	async function deleteBoard() {
+		if (modalConfirm === $decks[navDeck.arr].boards[modalIndex].title) {
+			$decks[navDeck.arr].boards.splice(modalIndex, 1);
+			decks.set($decks);
+			closeModals();
+			const res = await fetch(`${$api}/deleteboard`, {
+				method: "POST",
+				body: JSON.stringify({
+					uid: $currentUser.uid,
+					did: $decks[navDeck.arr].id,
+					bid: modalID,
+				}),
+				headers: {
+					"Content-Type": "application/json",
+				},
+			});
+		} else {
+			confirm = false;
 		}
 	}
 </script>
@@ -132,9 +192,34 @@
 											d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"
 										/>
 									</svg>
+								{:else if board.type == 2}
+									<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"
+										/>
+									</svg>
+								{:else if board.type == 3}
+									<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+										/>
+									</svg>
 								{/if}
 								{board.title}
-								<svg class="board-options" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<svg
+									on:click={openBoardOptions(board.id, board.title, i)}
+									class="board-options"
+									xmlns="http://www.w3.org/2000/svg"
+									fill="none"
+									viewBox="0 0 24 24"
+									stroke="currentColor"
+								>
 									<path
 										stroke-linecap="round"
 										stroke-linejoin="round"
@@ -171,7 +256,7 @@
 	{/if}
 </nav>
 <div id="user-menu" class={menuOpen ? "menuOpen" : ""}>
-	<div on:click={openOptions} id="user-options">
+	<div on:click={openUserOptions} id="user-options">
 		<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 			<path
 				stroke-linecap="round"
@@ -190,22 +275,48 @@
 		<p>Logout</p>
 	</div>
 </div>
-<div id="user-modal" class={optionsOpen ? "optionsOpen" : ""}>
-	<div id="close-box" on:click={closeOptions}>
+<div id="user-modal" class={userOptions ? "userOptions" : ""}>
+	<div class="close-box" on:click={closeModals}>
 		<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="slategrey">
 			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
 		</svg>
 	</div>
 	<h1>Options</h1>
-	<form method="post" on:submit|preventDefault={delUser}>
+	<form class="danger" method="post" on:submit|preventDefault={delUser}>
 		<label for="title">Please type in your username to confirm deletion.</label>
-		<input name="title" type="text" bind:value={userConfirm} />
+		<input class={confirm ? "" : "wrong"} name="title" type="text" bind:value={userConfirm} />
 		<button class="delete" type="submit">Delete</button>
 	</form>
 </div>
-<div on:click={closeOptions} class={optionsOpen ? "blackout" : "off"} />
+<div id="board-modal" class={boardOptions ? "boardOptions" : ""}>
+	<div class="close-box" on:click={closeModals}>
+		<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="slategrey">
+			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+		</svg>
+	</div>
+	<h1>Options</h1>
+	<form id="first" method="post" on:submit|preventDefault={updateBoard}>
+		<label for="title">Rename</label>
+		<input name="title" type="text" bind:value={modalTitle} />
+		<button class="button" type="submit">Update</button>
+	</form>
+	<form class="danger" method="post" on:submit|preventDefault={deleteBoard}>
+		<label for="title">Please type in the board's name to confirm deletion.</label>
+		<input class={confirm ? "" : "wrong"} name="title" type="text" bind:value={modalConfirm} />
+		<button class="delete" type="submit">Delete</button>
+	</form>
+</div>
+<div on:click={closeModals} class={blackoutOpen ? "blackout" : "off"} />
 
 <style>
+	#first {
+		padding: 0px !important;
+		margin-top: 8px !important;
+	}
+	input.wrong {
+		border: 2px solid var(--main-red);
+		background-color: lightpink;
+	}
 	nav {
 		color: var(--off-white);
 		width: 100%;
@@ -296,7 +407,8 @@
 		opacity: 100%;
 		z-index: 5;
 	}
-	#user-modal {
+	#user-modal,
+	#board-modal {
 		position: absolute;
 		display: none;
 		position: absolute;
@@ -304,25 +416,36 @@
 		left: 50%;
 		transform: translate(-50%, -50%);
 	}
-	#user-modal.optionsOpen {
+	form input {
+		border: 1px solid grey;
+		border-radius: 4px;
+		padding: 4px;
+	}
+	#user-modal.userOptions,
+	#board-modal.boardOptions {
 		display: block;
 		margin: auto;
-		padding: 32px;
+		padding: 16px 32px 32px 32px;
 		border-radius: 16px;
 		border: 1px solid lightgrey;
 		background-color: var(--less-white);
 		z-index: 10;
 	}
-	#user-modal form {
+	#user-modal form,
+	#board-modal form {
 		display: flex;
 		flex-direction: column;
 		padding: 16px;
-		border-radius: 4px;
-		border: 2px solid var(--main-red);
 		position: relative;
 		margin-top: 32px;
 	}
-	#user-modal form:before {
+	#user-modal .danger,
+	#board-modal .danger {
+		border-radius: 4px;
+		border: 2px solid var(--main-red);
+	}
+	#user-modal .danger:before,
+	#board-modal .danger:before {
 		content: "Danger Zone";
 		color: var(--main-red);
 		position: absolute;
@@ -331,13 +454,14 @@
 		top: -12px;
 		left: 8px;
 	}
-	#user-modal form * {
+	#user-modal form *,
+	#board-modal form * {
 		margin-top: 16px;
 	}
-	#close-box:hover svg {
+	.close-box:hover svg {
 		stroke: black;
 	}
-	#close-box {
+	.close-box {
 		position: absolute;
 		top: 0px;
 		right: 0px;
@@ -358,6 +482,17 @@
 	}
 	.off {
 		display: none;
+	}
+	.button {
+		background-color: var(--main-green);
+		padding: 8px;
+		border: 0px;
+		color: white;
+		border-radius: 4px;
+		cursor: pointer;
+	}
+	.button:hover {
+		background-color: var(--hv-green);
 	}
 	.delete {
 		background-color: var(--main-red) !important;
@@ -427,8 +562,7 @@
 	.board-options {
 		display: none;
 		stroke: rgba(255, 255, 255, 0.5);
-		margin-left: 4px;
-		margin-bottom: 0px !important;
+		margin: 0px 0px 0px 4px !important;
 	}
 	.board-options:hover {
 		stroke: var(--off-white);

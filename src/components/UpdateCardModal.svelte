@@ -21,7 +21,15 @@
 				"Content-Type": "application/json",
 			},
 		});
-		removeCard(id);
+		let ind = $decks[arr].cards.findIndex((c) => c.id == id);
+		$decks[arr].cards[ind].title = title;
+		$decks[arr].cards[ind].content = content;
+		decks.set($decks);
+		$updateCards.splice(
+			$updateCards.findIndex((card) => card.id == id),
+			1
+		);
+		updateCards.set($updateCards);
 	}
 
 	async function deleteCard(did, id) {

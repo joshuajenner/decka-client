@@ -4,9 +4,9 @@ import { readable } from 'svelte/store';
 
 // Q2qfwFNyHSNO7pqigpOJ3BznN3r2
 export const currentUser = writable({
-    loggedIn: true,
-    uid: "Q2qfwFNyHSNO7pqigpOJ3BznN3r2",
-    name: "wow",
+    loggedIn: false,
+    uid: "",
+    name: "",
     user: null
 });
 

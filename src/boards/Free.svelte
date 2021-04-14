@@ -1,11 +1,12 @@
 <script>
+	import { onMount } from "svelte";
 	import { currentUser } from "../store.js";
 	import { api } from "../store.js";
 	import { decks } from "../store";
 	import { selectedBoard } from "../store";
 
 	import { flip } from "svelte/animate";
-	import { dndzone, SHADOW_ITEM_MARKER_PROPERTY_NAME } from "svelte-dnd-action";
+	import { dndzone, SHADOW_ITEM_MARKER_PROPERTY_NAME, TRIGGERS } from "svelte-dnd-action";
 	import { clickOutside } from "../functions/clickOutside.js";
 
 	export let boardID;
@@ -21,8 +22,46 @@
 	let modalTitle = "";
 	let modalContent = "";
 
-	async function getGridCards() {
-		const res = await fetch(`${$api}/getgridcards`, {
+	let itemToTop = {};
+	let itemToLeft = {};
+	let itemPosition = { x: 0, y: 0 };
+
+	let draggedElement;
+
+	let dragCardI;
+
+	// called through transformDraggedElement
+	function setDraggedElement(element, data, index) {
+		draggedElement = element;
+	}
+
+	function handleMouseMove(e) {
+		if (draggedElement !== undefined) {
+			const dropZone = document.getElementById(boardID);
+			// let positionInDropZone = getPositionIn(draggedElement, dropZone);
+			// console.clear();
+			// console.log(JSON.stringify(positionInDropZone));
+			// itemPosition = getPositionIn(draggedElement, dropZone);
+			itemPosition = { x: e.clientX - 120, y: e.clientY - 180 };
+		}
+	}
+	onMount(() => {
+		window.addEventListener("mousemove", handleMouseMove);
+		return function cleanup() {
+			window.removeEventListener("mousemove", handleMouseMove);
+		};
+	});
+
+	function getPositionIn(element, element2) {
+		let { x: elX, y: elY } = element.getBoundingClientRect();
+		let { x: el2X, y: el2Y } = element2.getBoundingClientRect();
+		return {
+			x: elX - el2X,
+			y: elY - el2Y,
+		};
+	}
+	async function getFreeCards() {
+		const res = await fetch(`${$api}/getfreecards`, {
 			method: "POST",
 			body: JSON.stringify({
 				uid: $currentUser.uid,
@@ -43,8 +82,8 @@
 		cardsLoaded = true;
 		console.log(cards);
 	}
-	async function updateGridCards() {
-		const res = await fetch(`${$api}/updategridcards`, {
+	async function updateFreeCards() {
+		const res = await fetch(`${$api}/updatefreecards`, {
 			method: "POST",
 			body: JSON.stringify({
 				uid: $currentUser.uid,
@@ -57,18 +96,17 @@
 			},
 		});
 	}
-
 	function deleteCard() {
 		$decks[deckArr].boards[boardI].cards.splice(modalI, 1);
 		decks.set($decks);
 		updateModal = false;
-		updateGridCards();
+		updateFreeCards();
 	}
 	function updateCard() {
 		$decks[deckArr].boards[boardI].cards[modalI].title = modalTitle;
 		$decks[deckArr].boards[boardI].cards[modalI].content = modalContent;
 		updateModal = false;
-		updateGridCards();
+		updateFreeCards();
 	}
 	function closeModal() {
 		updateModal = false;
@@ -82,42 +120,65 @@
 	function transformDraggedElement(draggedEl, data, index) {
 		draggedEl.style.opacity = 0.7;
 	}
+	function handleDragStart(i) {
+		dragCardI = i;
+		console.log(dragCardI);
+	}
 	function handleSort(e) {
 		$decks[deckArr].boards[boardI].cards = e.detail.items;
 	}
 	function handleFinalize(e) {
-		$decks[deckArr].boards[boardI].cards = e.detail.items;
-		updateGridCards();
-	}
+		// const { trigger, id } = e.detail.info;
+		// itemToTop = { ...itemToTop, [id]: itemPosition.y };
+		// itemToLeft = { ...itemToLeft, [id]: itemPosition.x };
+		// console.log(itemToTop);
+		// console.log(itemToLeft);
 
-	getGridCards();
+		// let ti = $decks[deckArr].boards[boardI].cards.findIndex((c) => c.dnd === e.detail.info.id);
+		// if (ti != -1) {
+		// 	$decks[deckArr].boards[boardI].cards[ti].xval = itemPosition.x;
+		// 	$decks[deckArr].boards[boardI].cards[ti].yval = itemPosition.y;
+		// 	$decks[deckArr].boards[boardI].cards = e.detail.items;
+		// }
+
+		let ti = e.detail.items.findIndex((c) => c.dnd === e.detail.info.id);
+		if (ti != -1) {
+			e.detail.items[ti].xval = itemPosition.x;
+			e.detail.items[ti].yval = itemPosition.y;
+			$decks[deckArr].boards[boardI].cards = e.detail.items;
+		}
+		updateFreeCards();
+	}
+	getFreeCards();
+	// on:mousemove={handleMouseMove} || itemPosition.y || 0  || itemPosition.x || 0 					animate:flip={{ duration: flipDurationMs }}
 </script>
 
-<div class={$selectedBoard.id === boardID ? "grid" : "unselected"}>
+<div class={$selectedBoard.id === boardID ? "free" : "unselected"}>
 	{#if cardsLoaded}
 		<section
+			id={boardID}
 			class={$decks[deckArr].boards[boardI].cards.length > 0 ? "" : "empty"}
-			use:dndzone={{ items: $decks[deckArr].boards[boardI].cards, flipDurationMs, transformDraggedElement, type: "cards" }}
+			use:dndzone={{ items: $decks[deckArr].boards[boardI].cards, flipDurationMs, transformDraggedElement: setDraggedElement, type: "cards" }}
 			on:consider={(e) => handleSort(e)}
 			on:finalize={(e) => handleFinalize(e)}
 		>
 			{#each $decks[deckArr].boards[boardI].cards as card, index (card.dnd)}
-				<div on:click={openUpdate(index, card.title, card.content)} id={card.id} class="card sh" animate:flip={{ duration: flipDurationMs }}>
+				<div style="top: {card.yval}px; left: {card.xval}px " on:click={openUpdate(index, card.title, card.content)} on:mousedown={handleDragStart(index)} id={card.id} class="card sh">
 					<div class="card-title lato">
 						<p>{card.title}</p>
 					</div>
 					<div class="card-body">
 						<p>{card.content}</p>
 					</div>
-					{#if card[SHADOW_ITEM_MARKER_PROPERTY_NAME]}
+					<!-- {#if card[SHADOW_ITEM_MARKER_PROPERTY_NAME]}
 						<div class="custom-shadow-item">{card.title}</div>
-					{/if}
+					{/if} -->
 				</div>
 			{/each}
 		</section>
 	{/if}
 </div>
-<div class={updateModal ? "grid-modal" : "modal-closed"}>
+<div class={updateModal ? "free-modal" : "modal-closed"}>
 	<div use:clickOutside on:click_outside={closeModal} class="update-card">
 		<form on:submit|preventDefault={updateCard}>
 			<div class="update-title">
@@ -133,8 +194,8 @@
 </div>
 
 <style>
-	section.empty {
-		position: relative;
+	section {
+		/* position: relative; */
 	}
 	section.empty:after {
 		content: "There are no cards to display.";
@@ -147,7 +208,7 @@
 	.modal-closed {
 		display: none;
 	}
-	.grid-modal {
+	.free-modal {
 		padding: 16px;
 		display: flex;
 		position: absolute;
@@ -221,19 +282,19 @@
 		bottom: 16px;
 		right: 96px;
 	}
-	.grid {
+	.free {
 		height: 100%;
 		width: 100%;
 		padding: 16px;
 	}
-	.grid section {
-		min-height: 248px;
+	.free section {
+		height: 100%;
 		width: 100%;
 		display: flex;
 		flex-wrap: wrap;
 		border-radius: 12px;
 	}
-	.grid section:focus {
+	.free section:focus {
 		outline: 0px;
 	}
 	.unselected {
@@ -244,7 +305,7 @@
 		border: 1px solid lightgrey;
 		padding: 8px 16px;
 		background-color: var(--off-white);
-		position: relative;
+		position: absolute;
 		cursor: pointer;
 		margin: 4px;
 		width: 280px;

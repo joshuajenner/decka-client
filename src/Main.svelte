@@ -25,14 +25,8 @@
 
 	import Grid from "./boards/Grid.svelte";
 	import Columns from "./boards/Columns.svelte";
-
-	let tempCards = [
-		{ id: "test1", order: 7, title: "Test 1", content: "Test Content" },
-		{ id: "test2", order: 8, title: "Test 2", content: "Test Content" },
-		{ id: "test3", order: 10, title: "Test 3", content: "Test Content" },
-		{ id: "test4", order: 16, title: "Test 4", content: "Test Content" },
-		{ id: "test5", order: 32, title: "Test 5", content: "Test Content" },
-	];
+	import Free from "./boards/Free.svelte";
+	import Calendar from "./boards/Calendar.svelte";
 
 	let selectedDeck = {
 		arr: -1,
@@ -97,6 +91,7 @@
 		});
 		const allData = await res.json();
 		$decks[$decks.findIndex((deck) => deck.id === deckID)].cards = allData;
+		console.log(allData);
 	}
 	function selectDeck(id, name) {
 		selectedDeck = {
@@ -196,7 +191,7 @@
 					</div>
 				</div>
 				{#if selectedDeck.id != ""}
-					<ListAllCards bind:arr={selectedDeck.arr} bind:items={tempCards} />
+					<ListAllCards bind:arr={selectedDeck.arr} />
 				{/if}
 			</div>
 			<UpdateCardModal bind:arr={selectedDeck.arr} />
@@ -206,9 +201,13 @@
 				{#if boardsLoaded[selectedDeck.arr] == true}
 					{#each $decks[selectedDeck.arr].boards as board, index}
 						{#if board.type == 0}
-							<Grid bind:boardID={board.id} boardI={index} />
+							<Grid bind:boardID={board.id} boardI={index} bind:deckID={selectedDeck.id} bind:deckArr={selectedDeck.arr} />
 						{:else if board.type == 1}
 							<Columns bind:boardID={board.id} boardI={index} bind:deckID={selectedDeck.id} bind:deckArr={selectedDeck.arr} />
+						{:else if board.type == 2}
+							<Free bind:boardID={board.id} boardI={index} bind:deckID={selectedDeck.id} bind:deckArr={selectedDeck.arr} />
+						{:else if board.type == 3}
+							<Calendar bind:boardID={board.id} boardI={index} bind:deckID={selectedDeck.id} bind:deckArr={selectedDeck.arr} />
 						{/if}
 					{/each}
 				{/if}

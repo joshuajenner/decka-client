@@ -51,6 +51,14 @@
 				<input type="radio" bind:group={formType} value={1} />
 				Columns
 			</label>
+			<label>
+				<input type="radio" bind:group={formType} value={2} />
+				Free
+			</label>
+			<label>
+				<input type="radio" bind:group={formType} value={3} />
+				Calendar
+			</label>
 			<button type="submit">Submit</button>
 		</form>
 		<div id="close-box" on:click={setClose}>

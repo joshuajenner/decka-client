@@ -21,36 +21,86 @@
 	let modalTitle = "";
 	let modalContent = "";
 
-	async function getGridCards() {
-		const res = await fetch(`${$api}/getgridcards`, {
+	function daysInMonth(year, monthAfter) {
+		return new Date(year, monthAfter, 0).getDate();
+	}
+
+	let today = new Date();
+	let year = today.getFullYear();
+	let month = today.getMonth();
+	let monthName = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+	let monthLength = daysInMonth(year, month + 1);
+	let yearInd = 0;
+	let calGrid = [];
+
+	console.log(monthLength);
+	$decks[deckArr].boards[boardI].years = [{ id: year, months: [] }];
+
+	async function getCalendarCards() {
+		const res = await fetch(`${$api}/getcalendarcards`, {
 			method: "POST",
 			body: JSON.stringify({
 				uid: $currentUser.uid,
 				did: deckID,
 				bid: boardID,
+				year: year,
+				month,
 			}),
 			headers: {
 				"Content-Type": "application/json",
 			},
 		});
 		const cards = await res.json();
-		let card = 0;
-		$decks[deckArr].boards[boardI].cards = [];
-		console.log($decks[deckArr].boards[boardI].cards);
-		for (card in cards) {
-			$decks[deckArr].boards[boardI].cards.push(cards[card]);
-		}
+		// let card = 0;
+		// $decks[deckArr].boards[boardI].cards = [];
+		// console.log($decks[deckArr].boards[boardI].cards);
+		// for (card in cards) {
+		// 	$decks[deckArr].boards[boardI].cards.push(cards[card]);
+		// }
+		yearInd = $decks[deckArr].boards[boardI].years.findIndex((y) => y.id === year);
+		$decks[deckArr].boards[boardI].month = cards;
+		constructCalendar();
 		cardsLoaded = true;
-		console.log(cards);
+		console.log($decks[deckArr].boards[boardI].month.days);
 	}
-	async function updateGridCards() {
-		const res = await fetch(`${$api}/updategridcards`, {
+	function constructCalendar() {
+		let firstDay = new Date(year, month, 1).getDay();
+		if (firstDay != 1) {
+			if (firstDay == 0) {
+				firstDay = 7;
+			}
+			firstDay -= 1;
+			for (let i = 0; i > -firstDay; --i) {
+				calGrid.unshift({ month: month - 1, date: new Date(year, month, i).getDate() });
+			}
+		}
+		for (let j = 1; j <= monthLength; j++) {
+			calGrid.push({ month: month, date: j, ind: j - 1 });
+		}
+		if (calGrid.length < 35) {
+			let fill = 35 - calGrid.length;
+			for (let k = 1; k <= fill; k++) {
+				calGrid.push({ month: month + 1, date: k });
+			}
+		} else if (calGrid.length > 35) {
+			let fill = 42 - calGrid.length;
+			for (let m = 1; m <= fill; m++) {
+				calGrid.push({ month: month + 1, date: m });
+			}
+		}
+		console.log(calGrid);
+	}
+	async function updateCalendarCards(di, dd) {
+		const res = await fetch(`${$api}/updatecalendarcards`, {
 			method: "POST",
 			body: JSON.stringify({
 				uid: $currentUser.uid,
 				did: deckID,
 				bid: boardID,
-				cards: $decks[deckArr].boards[boardI].cards,
+				year: year,
+				month: month,
+				day: dd,
+				cards: $decks[deckArr].boards[boardI].month.days[di].cards,
 			}),
 			headers: {
 				"Content-Type": "application/json",
@@ -62,13 +112,13 @@
 		$decks[deckArr].boards[boardI].cards.splice(modalI, 1);
 		decks.set($decks);
 		updateModal = false;
-		updateGridCards();
+		updateCalendarCards();
 	}
 	function updateCard() {
 		$decks[deckArr].boards[boardI].cards[modalI].title = modalTitle;
 		$decks[deckArr].boards[boardI].cards[modalI].content = modalContent;
 		updateModal = false;
-		updateGridCards();
+		updateCalendarCards();
 	}
 	function closeModal() {
 		updateModal = false;
@@ -82,42 +132,63 @@
 	function transformDraggedElement(draggedEl, data, index) {
 		draggedEl.style.opacity = 0.7;
 	}
-	function handleSort(e) {
-		$decks[deckArr].boards[boardI].cards = e.detail.items;
+	function handleSort(e, di) {
+		$decks[deckArr].boards[boardI].month.days[di].cards = e.detail.items;
 	}
-	function handleFinalize(e) {
-		$decks[deckArr].boards[boardI].cards = e.detail.items;
-		updateGridCards();
+	function handleFinalize(e, di, dd) {
+		$decks[deckArr].boards[boardI].month.days[di].cards = e.detail.items;
+		decks.set($decks);
+		updateCalendarCards(di, dd);
 	}
 
-	getGridCards();
+	getCalendarCards();
 </script>
 
-<div class={$selectedBoard.id === boardID ? "grid" : "unselected"}>
+<div class={$selectedBoard.id === boardID ? "calendar" : "unselected"}>
 	{#if cardsLoaded}
-		<section
-			class={$decks[deckArr].boards[boardI].cards.length > 0 ? "" : "empty"}
-			use:dndzone={{ items: $decks[deckArr].boards[boardI].cards, flipDurationMs, transformDraggedElement, type: "cards" }}
-			on:consider={(e) => handleSort(e)}
-			on:finalize={(e) => handleFinalize(e)}
-		>
-			{#each $decks[deckArr].boards[boardI].cards as card, index (card.dnd)}
-				<div on:click={openUpdate(index, card.title, card.content)} id={card.id} class="card sh" animate:flip={{ duration: flipDurationMs }}>
-					<div class="card-title lato">
-						<p>{card.title}</p>
-					</div>
-					<div class="card-body">
-						<p>{card.content}</p>
-					</div>
-					{#if card[SHADOW_ITEM_MARKER_PROPERTY_NAME]}
-						<div class="custom-shadow-item">{card.title}</div>
+		<div class="date-box">
+			<h4>{monthName[month]}, {year}</h4>
+		</div>
+		<div class={calGrid.length <= 35 ? "cal-box row6" : "cal-box row7"}>
+			<div class="day"><p>Monday</p></div>
+			<div class="day"><p>Tuesday</p></div>
+			<div class="day"><p>Wednesday</p></div>
+			<div class="day"><p>Thursday</p></div>
+			<div class="day"><p>Friday</p></div>
+			<div class="day"><p>Saturday</p></div>
+			<div class="day"><p>Sunday</p></div>
+			{#each calGrid as day, i}
+				<div class="day">
+					<p class="dn">{day.date}</p>
+					{#if day.month === month}
+						<section
+							use:dndzone={{ items: $decks[deckArr].boards[boardI].month.days[day.ind].cards, flipDurationMs, transformDraggedElement, type: "cards" }}
+							on:consider={(e) => handleSort(e, day.ind)}
+							on:finalize={(e) => handleFinalize(e, day.ind, day.date)}
+						>
+							{#each $decks[deckArr].boards[boardI].month.days[day.ind].cards as card (card.dnd)}
+								<div on:click={openUpdate(card.title, card.content)} id={card.id} class="card sh" animate:flip={{ duration: flipDurationMs }}>
+									<div class="card-title lato">
+										<p>{card.title}</p>
+									</div>
+									<!-- <div class="card-body">
+										<p>{card.content}</p>
+									</div> -->
+									{#if card[SHADOW_ITEM_MARKER_PROPERTY_NAME]}
+										<div class="custom-shadow-item">{card.title}</div>
+									{/if}
+								</div>
+							{/each}
+						</section>
 					{/if}
 				</div>
 			{/each}
-		</section>
+		</div>
+	{:else}
+		<h4>Loading...</h4>
 	{/if}
 </div>
-<div class={updateModal ? "grid-modal" : "modal-closed"}>
+<div class={updateModal ? "calendar-modal" : "modal-closed"}>
 	<div use:clickOutside on:click_outside={closeModal} class="update-card">
 		<form on:submit|preventDefault={updateCard}>
 			<div class="update-title">
@@ -133,6 +204,32 @@
 </div>
 
 <style>
+	.day {
+		border: 0.5px solid rgb(233, 233, 233);
+		padding: 8px;
+		height: 163px;
+	}
+	.day section {
+		height: 100%;
+	}
+	.dn {
+		color: slategrey;
+	}
+	.date-box {
+		margin-bottom: 16px;
+	}
+	.cal-box {
+		display: grid;
+		grid-template-columns: repeat(7, 1fr);
+		height: 100%;
+		border: 0.5px solid rgb(233, 233, 233);
+	}
+	.row6 {
+		grid-template-rows: 36px 1fr 1fr 1fr 1fr 1fr;
+	}
+	.row7 {
+		grid-template-rows: 36px 1fr 1fr 1fr 1fr 1fr 1fr;
+	}
 	section.empty {
 		position: relative;
 	}
@@ -147,7 +244,7 @@
 	.modal-closed {
 		display: none;
 	}
-	.grid-modal {
+	.calendar-modal {
 		padding: 16px;
 		display: flex;
 		position: absolute;
@@ -221,19 +318,16 @@
 		bottom: 16px;
 		right: 96px;
 	}
-	.grid {
+	.calendar {
 		height: 100%;
 		width: 100%;
 		padding: 16px;
 	}
-	.grid section {
-		min-height: 248px;
+	.calendar section {
 		width: 100%;
-		display: flex;
-		flex-wrap: wrap;
 		border-radius: 12px;
 	}
-	.grid section:focus {
+	.calendar section:focus {
 		outline: 0px;
 	}
 	.unselected {
@@ -247,8 +341,8 @@
 		position: relative;
 		cursor: pointer;
 		margin: 4px;
-		width: 280px;
-		height: 240px;
+		width: 100%;
+		height: 48px;
 	}
 	.sh {
 		box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;

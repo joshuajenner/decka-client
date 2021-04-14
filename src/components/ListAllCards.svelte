@@ -80,7 +80,7 @@
 				<div id="loader" class="center dark"><span /></div>
 			{:else}
 				{#if $decks[arr].cards.length == 0}
-					<p class="lato">No Cards to display.</p>
+					<p class="lato none">There are no cards to display.</p>
 				{/if}
 				<section id="all-cards-dnd" use:dndzone={{ items: $decks[arr].cards, flipDurationMs, transformDraggedElement, type: "cards" }} on:consider={handleSort} on:finalize={finalizeDND}>
 					{#each $decks[arr].cards as item (item.dnd)}
@@ -111,6 +111,9 @@
 </div>
 
 <style>
+	.none {
+		color: slategrey;
+	}
 	#card-list {
 		transition: margin 0.15s;
 		border-right: 1px solid lightgrey;
@@ -166,9 +169,9 @@
 		transition: margin 0.2s;
 		cursor: pointer;
 	}
-	.card.sh {
+	/* .card.sh {
 		box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;
-	}
+	} */
 	.custom-shadow-item {
 		position: absolute;
 		top: 0;

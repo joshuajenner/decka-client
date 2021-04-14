@@ -32,12 +32,12 @@
 	// let newOrder = $decks[deckArr].boards.length + 1;
 
 	async function getColumns() {
-		const res = await fetch(`${$api}/getColumns`, {
+		const res = await fetch(`${$api}/getcolumns`, {
 			method: "POST",
 			body: JSON.stringify({
 				uid: $currentUser.uid,
 				did: deckID,
-				bid: $selectedBoard.id,
+				bid: boardID,
 			}),
 			headers: {
 				"Content-Type": "application/json",
@@ -52,6 +52,7 @@
 			colAdjs.push(false);
 		}
 		columnsLoaded = true;
+		console.log(allColumns);
 	}
 	async function newColumn() {
 		let dndID = Math.floor(Math.random() * 90000) + 10000;
@@ -60,7 +61,7 @@
 			body: JSON.stringify({
 				uid: $currentUser.uid,
 				did: deckID,
-				bid: $selectedBoard.id,
+				bid: boardID,
 				title: colTitle,
 				dnd: dndID,
 				order: $decks[deckArr].boards[boardI].columns.length + 10,
@@ -77,7 +78,7 @@
 			cards: [],
 			dnd: dndID,
 		});
-		console.log(colID.id);
+		console.log("clicked");
 		$decks[deckArr].boards[boardI].columns = $decks[deckArr].boards[boardI].columns;
 		decks.set($decks);
 		closeInput();
@@ -100,7 +101,7 @@
 			body: JSON.stringify({
 				uid: $currentUser.uid,
 				did: deckID,
-				bid: $selectedBoard.id,
+				bid: boardID,
 				cid: id,
 				title: $decks[deckArr].boards[boardI].columns[i].title,
 			}),
@@ -115,7 +116,7 @@
 			body: JSON.stringify({
 				uid: $currentUser.uid,
 				did: deckID,
-				bid: $selectedBoard.id,
+				bid: boardID,
 				cid: id,
 			}),
 			headers: {
@@ -135,7 +136,7 @@
 			body: JSON.stringify({
 				uid: $currentUser.uid,
 				did: deckID,
-				bid: $selectedBoard.id,
+				bid: boardID,
 				cid: id,
 				cards: $decks[deckArr].boards[boardI].columns[i].cards,
 			}),
@@ -150,7 +151,7 @@
 			body: JSON.stringify({
 				uid: $currentUser.uid,
 				did: deckID,
-				bid: $selectedBoard.id,
+				bid: boardID,
 				cols: $decks[deckArr].boards[boardI].columns,
 			}),
 			headers: {
@@ -586,11 +587,11 @@
 	.enter .add-title {
 		display: none;
 	}
-	.columns-modal form {
+	form {
 		padding: 16px;
 		width: 100%;
 	}
-	.columns-modal input {
+	input {
 		width: 100%;
 		padding: 8px;
 		font-family: Roboto;
@@ -599,23 +600,22 @@
 		border-radius: 4px;
 		background-color: var(--less-white);
 	}
-	.columns-modal .input-buttons {
+	.input-buttons {
 		display: flex;
 		align-items: center;
 		margin-top: 8px;
 	}
-	.columns-modal .close-box:hover svg {
+	.close-box:hover svg {
 		stroke: black;
 	}
-	.columns-modal .close-box svg {
+	.close-box svg {
 		height: 100%;
 	}
-	.columns-modal .close-box {
+	.close-box {
 		height: 32px;
 		cursor: pointer;
-		margin-left: 8px;
 	}
-	.columns-modal button {
+	button {
 		font-size: 0.8em;
 		background-color: var(--main-green);
 		padding: 8px 16px;
@@ -624,7 +624,7 @@
 		border-radius: 4px;
 		cursor: pointer;
 	}
-	.columns-modal button:hover {
+	button:hover {
 		background-color: var(--hv-green);
 	}
 </style>
