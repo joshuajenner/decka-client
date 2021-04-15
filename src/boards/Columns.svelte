@@ -6,6 +6,7 @@
 	import { flip } from "svelte/animate";
 	import { dndzone, SHADOW_ITEM_MARKER_PROPERTY_NAME } from "svelte-dnd-action";
 	import { clickOutside } from "../functions/clickOutside.js";
+	import { modalError } from "../store";
 
 	import { selectedBoard } from "../store";
 
@@ -32,56 +33,68 @@
 	// let newOrder = $decks[deckArr].boards.length + 1;
 
 	async function getColumns() {
-		const res = await fetch(`${$api}/getcolumns`, {
-			method: "POST",
-			body: JSON.stringify({
-				uid: $currentUser.uid,
-				did: deckID,
-				bid: boardID,
-			}),
-			headers: {
-				"Content-Type": "application/json",
-			},
-		});
-		const allColumns = await res.json();
-		$decks[deckArr].boards[boardI].columns = allColumns;
-		decks.set($decks);
-		console.log($decks[deckArr].boards[boardI].columns);
-		let col;
-		for (col in allColumns) {
-			colAdjs.push(false);
+		try {
+			const res = await fetch(`${$api}/getcolumns`, {
+				method: "POST",
+				body: JSON.stringify({
+					uid: $currentUser.uid,
+					did: deckID,
+					bid: boardID,
+				}),
+				headers: {
+					"Content-Type": "application/json",
+				},
+			});
+			const allColumns = await res.json();
+			$decks[deckArr].boards[boardI].columns = allColumns;
+			decks.set($decks);
+			let col;
+			for (col in allColumns) {
+				colAdjs.push(false);
+			}
+			columnsLoaded = true;
+		} catch (e) {
+			modalError.set({
+				check: true,
+				msg: e,
+			});
 		}
-		columnsLoaded = true;
-		console.log(allColumns);
 	}
 	async function newColumn() {
-		let dndID = Math.floor(Math.random() * 90000) + 10000;
-		const res = await fetch(`${$api}/newcolumn`, {
-			method: "POST",
-			body: JSON.stringify({
-				uid: $currentUser.uid,
-				did: deckID,
-				bid: boardID,
+		try {
+			let dndID = Math.floor(Math.random() * 90000) + 10000;
+			const res = await fetch(`${$api}/newcolumn`, {
+				method: "POST",
+				body: JSON.stringify({
+					uid: $currentUser.uid,
+					did: deckID,
+					bid: boardID,
+					title: colTitle,
+					dnd: dndID,
+					order: $decks[deckArr].boards[boardI].columns.length + 10,
+				}),
+				headers: {
+					"Content-Type": "application/json",
+				},
+			});
+			let colID = await res.json();
+			$decks[deckArr].boards[boardI].columns.push({
+				id: colID.id,
 				title: colTitle,
-				dnd: dndID,
 				order: $decks[deckArr].boards[boardI].columns.length + 10,
-			}),
-			headers: {
-				"Content-Type": "application/json",
-			},
-		});
-		let colID = await res.json();
-		$decks[deckArr].boards[boardI].columns.push({
-			id: colID.id,
-			title: colTitle,
-			order: $decks[deckArr].boards[boardI].columns.length + 10,
-			cards: [],
-			dnd: dndID,
-		});
-		console.log("clicked");
-		$decks[deckArr].boards[boardI].columns = $decks[deckArr].boards[boardI].columns;
-		decks.set($decks);
-		closeInput();
+				cards: [],
+				dnd: dndID,
+			});
+			$decks[deckArr].boards[boardI].columns = $decks[deckArr].boards[boardI].columns;
+			decks.set($decks);
+			closeInput();
+		} catch (e) {
+			closeInput();
+			modalError.set({
+				check: true,
+				msg: e,
+			});
+		}
 	}
 	function openInput() {
 		input.focus();
@@ -96,69 +109,92 @@
 		colAdjs[ind] = !colAdjs[ind];
 	}
 	async function renameColumn(id, i) {
-		const res = await fetch(`${$api}/renamecolumn`, {
-			method: "POST",
-			body: JSON.stringify({
-				uid: $currentUser.uid,
-				did: deckID,
-				bid: boardID,
-				cid: id,
-				title: $decks[deckArr].boards[boardI].columns[i].title,
-			}),
-			headers: {
-				"Content-Type": "application/json",
-			},
-		});
+		try {
+			const res = await fetch(`${$api}/renamecolumn`, {
+				method: "POST",
+				body: JSON.stringify({
+					uid: $currentUser.uid,
+					did: deckID,
+					bid: boardID,
+					cid: id,
+					title: $decks[deckArr].boards[boardI].columns[i].title,
+				}),
+				headers: {
+					"Content-Type": "application/json",
+				},
+			});
+		} catch (e) {
+			modalError.set({
+				check: true,
+				msg: e,
+			});
+		}
 	}
 	async function deleteColumn(id, i) {
-		const res = await fetch(`${$api}/deletecolumn`, {
-			method: "POST",
-			body: JSON.stringify({
-				uid: $currentUser.uid,
-				did: deckID,
-				bid: boardID,
-				cid: id,
-			}),
-			headers: {
-				"Content-Type": "application/json",
-			},
-		});
-		// let card = 0;
-		// for (card in $decks[deckArr].boards[boardI].columns[i].cards) {
-		// 	$decks[deckArr].cards.push($decks[deckArr].boards[boardI].columns[i].cards[card]);
-		// }
-		$decks[deckArr].boards[boardI].columns.splice(i, 1);
-		decks.set($decks);
+		try {
+			const res = await fetch(`${$api}/deletecolumn`, {
+				method: "POST",
+				body: JSON.stringify({
+					uid: $currentUser.uid,
+					did: deckID,
+					bid: boardID,
+					cid: id,
+				}),
+				headers: {
+					"Content-Type": "application/json",
+				},
+			});
+			$decks[deckArr].boards[boardI].columns.splice(i, 1);
+			decks.set($decks);
+		} catch (e) {
+			modalError.set({
+				check: true,
+				msg: e,
+			});
+		}
 	}
 	async function updateColumnCards(id, i) {
-		const res = await fetch(`${$api}/updatecolumncards`, {
-			method: "POST",
-			body: JSON.stringify({
-				uid: $currentUser.uid,
-				did: deckID,
-				bid: boardID,
-				cid: id,
-				cards: $decks[deckArr].boards[boardI].columns[i].cards,
-			}),
-			headers: {
-				"Content-Type": "application/json",
-			},
-		});
+		try {
+			const res = await fetch(`${$api}/updatecolumncards`, {
+				method: "POST",
+				body: JSON.stringify({
+					uid: $currentUser.uid,
+					did: deckID,
+					bid: boardID,
+					cid: id,
+					cards: $decks[deckArr].boards[boardI].columns[i].cards,
+				}),
+				headers: {
+					"Content-Type": "application/json",
+				},
+			});
+		} catch (e) {
+			modalError.set({
+				check: true,
+				msg: e,
+			});
+		}
 	}
 	async function reorderColumns() {
-		const res = await fetch(`${$api}/reordercolumns`, {
-			method: "POST",
-			body: JSON.stringify({
-				uid: $currentUser.uid,
-				did: deckID,
-				bid: boardID,
-				cols: $decks[deckArr].boards[boardI].columns,
-			}),
-			headers: {
-				"Content-Type": "application/json",
-			},
-		});
-		console.log("re'd");
+		try {
+			const res = await fetch(`${$api}/reordercolumns`, {
+				method: "POST",
+				body: JSON.stringify({
+					uid: $currentUser.uid,
+					did: deckID,
+					bid: boardID,
+					cols: $decks[deckArr].boards[boardI].columns,
+				}),
+				headers: {
+					"Content-Type": "application/json",
+				},
+			});
+		} catch (e) {
+			modalError.set({
+				check: true,
+				msg: e,
+			});
+		}
 	}
 	function updateCard() {
 		let tempIndex = $decks[deckArr].boards[boardI].columns[modalColI].cards.findIndex((x) => x.id === modalCardID);

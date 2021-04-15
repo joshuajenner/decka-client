@@ -10,6 +10,7 @@
 	import { listCards } from "../store";
 
 	import { modalNewBoard } from "../store";
+	import { modalError } from "../store";
 
 	import { fly } from "svelte/transition";
 
@@ -91,7 +92,10 @@
 					console.log("User Deleted");
 				})
 				.catch(function (error) {
-					// An error happened.
+					modalError.set({
+						check: true,
+						msg: e,
+					});
 				});
 			const res = await fetch(`${$api}/deleteuser`, {
 				method: "POST",
@@ -107,39 +111,55 @@
 		}
 	}
 	async function updateBoard() {
-		// let bi = $decks[navDeck.arr].boards.findIndex((x) => x.id === modalID);
-		$decks[navDeck.arr].boards[modalIndex].title = modalTitle;
-		decks.set($decks);
-		closeModals();
-		const res = await fetch(`${$api}/updateboard`, {
-			method: "POST",
-			body: JSON.stringify({
-				uid: $currentUser.uid,
-				did: $decks[navDeck.arr].id,
-				bid: modalID,
-				title: modalTitle,
-			}),
-			headers: {
-				"Content-Type": "application/json",
-			},
-		});
-	}
-	async function deleteBoard() {
-		if (modalConfirm === $decks[navDeck.arr].boards[modalIndex].title) {
-			$decks[navDeck.arr].boards.splice(modalIndex, 1);
+		try {
+			$decks[navDeck.arr].boards[modalIndex].title = modalTitle;
 			decks.set($decks);
 			closeModals();
-			const res = await fetch(`${$api}/deleteboard`, {
+			const res = await fetch(`${$api}/updateboard`, {
 				method: "POST",
 				body: JSON.stringify({
 					uid: $currentUser.uid,
 					did: $decks[navDeck.arr].id,
 					bid: modalID,
+					title: modalTitle,
 				}),
 				headers: {
 					"Content-Type": "application/json",
 				},
 			});
+		} catch (e) {
+			modalError.set({
+				check: true,
+				msg: e,
+			});
+			closeModals();
+		}
+		// let bi = $decks[navDeck.arr].boards.findIndex((x) => x.id === modalID);
+	}
+	async function deleteBoard() {
+		if (modalConfirm === $decks[navDeck.arr].boards[modalIndex].title) {
+			try {
+				$decks[navDeck.arr].boards.splice(modalIndex, 1);
+				decks.set($decks);
+				closeModals();
+				const res = await fetch(`${$api}/deleteboard`, {
+					method: "POST",
+					body: JSON.stringify({
+						uid: $currentUser.uid,
+						did: $decks[navDeck.arr].id,
+						bid: modalID,
+					}),
+					headers: {
+						"Content-Type": "application/json",
+					},
+				});
+			} catch (e) {
+				closeModals();
+				modalError.set({
+					check: true,
+					msg: e,
+				});
+			}
 		} else {
 			confirm = false;
 		}
@@ -203,23 +223,11 @@
 									</svg>
 								{:else if board.type == 3}
 									<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-										<path
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											stroke-width="2"
-											d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-										/>
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
 									</svg>
 								{/if}
 								{board.title}
-								<svg
-									on:click={openBoardOptions(board.id, board.title, i)}
-									class="board-options"
-									xmlns="http://www.w3.org/2000/svg"
-									fill="none"
-									viewBox="0 0 24 24"
-									stroke="currentColor"
-								>
+								<svg on:click={openBoardOptions(board.id, board.title, i)} class="board-options" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 									<path
 										stroke-linecap="round"
 										stroke-linejoin="round"
@@ -325,6 +333,7 @@
 		overflow: hidden;
 		display: flex;
 		justify-content: space-between;
+		position: absolute;
 	}
 	#nav-icon {
 		display: flex;

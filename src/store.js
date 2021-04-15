@@ -12,7 +12,7 @@ export const currentUser = writable({
 
 // prod is https://decka-heroku.herokuapp.com
 // local is http://127.0.0.1:3000
-export const api = readable("http://127.0.0.1:3000")
+export const api = readable("https://decka-heroku.herokuapp.com")
 
 export const fb = writable();
 export const db = writable();
@@ -31,3 +31,7 @@ export const modalNewCard = writable(false);
 export const modalNewBoard = writable(false);
 export const modalUpdateDeck = writable(false);
 export const modalNewDeck = writable(false);
+export const modalError = writable({
+    check: false,
+    msg: ""
+});

@@ -4,47 +4,64 @@
 	import { updateCards } from "../store.js";
 
 	import { clickOutside } from "../functions/clickOutside.js";
+	import { modalError } from "../store";
 
 	export let arr;
 
 	async function updateCard(did, id, title, content) {
-		const res = await fetch(`${$api}/updatecard`, {
-			method: "POST",
-			body: JSON.stringify({
-				did: did,
-				uid: $currentUser.uid,
-				id: id,
-				title: title,
-				content,
-			}),
-			headers: {
-				"Content-Type": "application/json",
-			},
-		});
-		let ind = $decks[arr].cards.findIndex((c) => c.id == id);
-		$decks[arr].cards[ind].title = title;
-		$decks[arr].cards[ind].content = content;
-		decks.set($decks);
-		$updateCards.splice(
-			$updateCards.findIndex((card) => card.id == id),
-			1
-		);
-		updateCards.set($updateCards);
+		try {
+			const res = await fetch(`${$api}/updatecard`, {
+				method: "POST",
+				body: JSON.stringify({
+					did: did,
+					uid: $currentUser.uid,
+					id: id,
+					title: title,
+					content,
+				}),
+				headers: {
+					"Content-Type": "application/json",
+				},
+			});
+			let ind = $decks[arr].cards.findIndex((c) => c.id == id);
+			$decks[arr].cards[ind].title = title;
+			$decks[arr].cards[ind].content = content;
+			decks.set($decks);
+			$updateCards.splice(
+				$updateCards.findIndex((card) => card.id == id),
+				1
+			);
+			updateCards.set($updateCards);
+		} catch (e) {
+			updateCards.set([]);
+			modalError.set({
+				check: true,
+				msg: e,
+			});
+		}
 	}
 
 	async function deleteCard(did, id) {
-		const res = await fetch(`${$api}/deletecard`, {
-			method: "POST",
-			body: JSON.stringify({
-				did: did,
-				uid: $currentUser.uid,
-				id: id,
-			}),
-			headers: {
-				"Content-Type": "application/json",
-			},
-		});
-		removeCard(id);
+		try {
+			const res = await fetch(`${$api}/deletecard`, {
+				method: "POST",
+				body: JSON.stringify({
+					did: did,
+					uid: $currentUser.uid,
+					id: id,
+				}),
+				headers: {
+					"Content-Type": "application/json",
+				},
+			});
+			removeCard(id);
+		} catch (e) {
+			updateCards.set([]);
+			modalError.set({
+				check: true,
+				msg: e,
+			});
+		}
 	}
 
 	function removeCard(cid) {

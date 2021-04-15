@@ -8,6 +8,7 @@
 	import { flip } from "svelte/animate";
 	import { dndzone, SHADOW_ITEM_MARKER_PROPERTY_NAME, TRIGGERS } from "svelte-dnd-action";
 	import { clickOutside } from "../functions/clickOutside.js";
+	import { modalError } from "../store";
 
 	export let boardID;
 	export let boardI;
@@ -22,8 +23,6 @@
 	let modalTitle = "";
 	let modalContent = "";
 
-	let itemToTop = {};
-	let itemToLeft = {};
 	let itemPosition = { x: 0, y: 0 };
 
 	let draggedElement;
@@ -61,40 +60,52 @@
 		};
 	}
 	async function getFreeCards() {
-		const res = await fetch(`${$api}/getfreecards`, {
-			method: "POST",
-			body: JSON.stringify({
-				uid: $currentUser.uid,
-				did: deckID,
-				bid: boardID,
-			}),
-			headers: {
-				"Content-Type": "application/json",
-			},
-		});
-		const cards = await res.json();
-		let card = 0;
-		$decks[deckArr].boards[boardI].cards = [];
-		console.log($decks[deckArr].boards[boardI].cards);
-		for (card in cards) {
-			$decks[deckArr].boards[boardI].cards.push(cards[card]);
+		try {
+			const res = await fetch(`${$api}/getfreecards`, {
+				method: "POST",
+				body: JSON.stringify({
+					uid: $currentUser.uid,
+					did: deckID,
+					bid: boardID,
+				}),
+				headers: {
+					"Content-Type": "application/json",
+				},
+			});
+			const cards = await res.json();
+			let card = 0;
+			$decks[deckArr].boards[boardI].cards = [];
+			for (card in cards) {
+				$decks[deckArr].boards[boardI].cards.push(cards[card]);
+			}
+			cardsLoaded = true;
+		} catch (e) {
+			modalError.set({
+				check: true,
+				msg: e,
+			});
 		}
-		cardsLoaded = true;
-		console.log(cards);
 	}
 	async function updateFreeCards() {
-		const res = await fetch(`${$api}/updatefreecards`, {
-			method: "POST",
-			body: JSON.stringify({
-				uid: $currentUser.uid,
-				did: deckID,
-				bid: boardID,
-				cards: $decks[deckArr].boards[boardI].cards,
-			}),
-			headers: {
-				"Content-Type": "application/json",
-			},
-		});
+		try {
+			const res = await fetch(`${$api}/updatefreecards`, {
+				method: "POST",
+				body: JSON.stringify({
+					uid: $currentUser.uid,
+					did: deckID,
+					bid: boardID,
+					cards: $decks[deckArr].boards[boardI].cards,
+				}),
+				headers: {
+					"Content-Type": "application/json",
+				},
+			});
+		} catch (e) {
+			modalError.set({
+				check: true,
+				msg: e,
+			});
+		}
 	}
 	function deleteCard() {
 		$decks[deckArr].boards[boardI].cards.splice(modalI, 1);
@@ -128,19 +139,6 @@
 		$decks[deckArr].boards[boardI].cards = e.detail.items;
 	}
 	function handleFinalize(e) {
-		// const { trigger, id } = e.detail.info;
-		// itemToTop = { ...itemToTop, [id]: itemPosition.y };
-		// itemToLeft = { ...itemToLeft, [id]: itemPosition.x };
-		// console.log(itemToTop);
-		// console.log(itemToLeft);
-
-		// let ti = $decks[deckArr].boards[boardI].cards.findIndex((c) => c.dnd === e.detail.info.id);
-		// if (ti != -1) {
-		// 	$decks[deckArr].boards[boardI].cards[ti].xval = itemPosition.x;
-		// 	$decks[deckArr].boards[boardI].cards[ti].yval = itemPosition.y;
-		// 	$decks[deckArr].boards[boardI].cards = e.detail.items;
-		// }
-
 		let ti = e.detail.items.findIndex((c) => c.dnd === e.detail.info.id);
 		if (ti != -1) {
 			e.detail.items[ti].xval = itemPosition.x;

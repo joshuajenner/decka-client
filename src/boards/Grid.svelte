@@ -7,6 +7,7 @@
 	import { flip } from "svelte/animate";
 	import { dndzone, SHADOW_ITEM_MARKER_PROPERTY_NAME } from "svelte-dnd-action";
 	import { clickOutside } from "../functions/clickOutside.js";
+	import { modalError } from "../store";
 
 	export let boardID;
 	export let boardI;
@@ -22,40 +23,53 @@
 	let modalContent = "";
 
 	async function getGridCards() {
-		const res = await fetch(`${$api}/getgridcards`, {
-			method: "POST",
-			body: JSON.stringify({
-				uid: $currentUser.uid,
-				did: deckID,
-				bid: boardID,
-			}),
-			headers: {
-				"Content-Type": "application/json",
-			},
-		});
-		const cards = await res.json();
-		let card = 0;
-		$decks[deckArr].boards[boardI].cards = [];
-		console.log($decks[deckArr].boards[boardI].cards);
-		for (card in cards) {
-			$decks[deckArr].boards[boardI].cards.push(cards[card]);
+		try {
+			const res = await fetch(`${$api}/getgridcards`, {
+				method: "POST",
+				body: JSON.stringify({
+					uid: $currentUser.uid,
+					did: deckID,
+					bid: boardID,
+				}),
+				headers: {
+					"Content-Type": "application/json",
+				},
+			});
+			const cards = await res.json();
+			let card = 0;
+			$decks[deckArr].boards[boardI].cards = [];
+			console.log($decks[deckArr].boards[boardI].cards);
+			for (card in cards) {
+				$decks[deckArr].boards[boardI].cards.push(cards[card]);
+			}
+			cardsLoaded = true;
+		} catch (e) {
+			modalError.set({
+				check: true,
+				msg: e,
+			});
 		}
-		cardsLoaded = true;
-		console.log(cards);
 	}
 	async function updateGridCards() {
-		const res = await fetch(`${$api}/updategridcards`, {
-			method: "POST",
-			body: JSON.stringify({
-				uid: $currentUser.uid,
-				did: deckID,
-				bid: boardID,
-				cards: $decks[deckArr].boards[boardI].cards,
-			}),
-			headers: {
-				"Content-Type": "application/json",
-			},
-		});
+		try {
+			const res = await fetch(`${$api}/updategridcards`, {
+				method: "POST",
+				body: JSON.stringify({
+					uid: $currentUser.uid,
+					did: deckID,
+					bid: boardID,
+					cards: $decks[deckArr].boards[boardI].cards,
+				}),
+				headers: {
+					"Content-Type": "application/json",
+				},
+			});
+		} catch (e) {
+			modalError.set({
+				check: true,
+				msg: e,
+			});
+		}
 	}
 
 	function deleteCard() {

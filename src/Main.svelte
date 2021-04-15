@@ -10,6 +10,7 @@
 
 	import { modalUpdateDeck } from "./store";
 	import { modalNewDeck } from "./store";
+	import { modalError } from "./store";
 
 	import NavTop from "./components/NavTop.svelte";
 	import NavSide from "./components/NavSide.svelte";
@@ -40,58 +41,80 @@
 	let boardsLoaded = [];
 
 	async function getDecks() {
-		const res = await fetch(`${$api}/getdecks`, {
-			method: "POST",
-			body: JSON.stringify({
-				uid: $currentUser.uid,
-			}),
-			headers: {
-				"Content-Type": "application/json",
-			},
-		});
-		const allDecks = await res.json();
-		console.log(allDecks);
-		setBoardsStatus(allDecks.length);
-		$decks = allDecks;
+		try {
+			const res = await fetch(`${$api}/getdecks`, {
+				method: "POST",
+				body: JSON.stringify({
+					uid: $currentUser.uid,
+				}),
+				headers: {
+					"Content-Type": "application/json",
+				},
+			});
+
+			const allDecks = await res.json();
+			console.log(allDecks);
+			setBoardsStatus(allDecks.length);
+			$decks = allDecks;
+		} catch (e) {
+			modalError.set({
+				check: true,
+				msg: e,
+			});
+		}
 	}
 	async function getDeckBoards(deckID) {
-		const res = await fetch(`${$api}/getdeckboards`, {
-			method: "POST",
-			body: JSON.stringify({
-				uid: $currentUser.uid,
-				did: deckID,
-			}),
-			headers: {
-				"Content-Type": "application/json",
-			},
-		});
-		const allData = await res.json();
-		if (allData.length > 0) {
-			$decks[$decks.findIndex((deck) => deck.id === deckID)].boards = allData;
-			selectedBoard.set({
-				id: allData[0].id,
-				i: 0,
+		try {
+			const res = await fetch(`${$api}/getdeckboards`, {
+				method: "POST",
+				body: JSON.stringify({
+					uid: $currentUser.uid,
+					did: deckID,
+				}),
+				headers: {
+					"Content-Type": "application/json",
+				},
 			});
-		} else {
-			$decks[$decks.findIndex((deck) => deck.id === deckID)].boards = [];
+			const allData = await res.json();
+			if (allData.length > 0) {
+				$decks[$decks.findIndex((deck) => deck.id === deckID)].boards = allData;
+				selectedBoard.set({
+					id: allData[0].id,
+					i: 0,
+				});
+			} else {
+				$decks[$decks.findIndex((deck) => deck.id === deckID)].boards = [];
+			}
+			boardsLoaded[selectedDeck.arr] = true;
+			decks.set($decks);
+		} catch (e) {
+			modalError.set({
+				check: true,
+				msg: e,
+			});
 		}
-		boardsLoaded[selectedDeck.arr] = true;
-		decks.set($decks);
 	}
 	async function getDeckCards(deckID) {
-		const res = await fetch(`${$api}/getdeckcards`, {
-			method: "POST",
-			body: JSON.stringify({
-				uid: $currentUser.uid,
-				did: deckID,
-			}),
-			headers: {
-				"Content-Type": "application/json",
-			},
-		});
-		const allData = await res.json();
-		$decks[$decks.findIndex((deck) => deck.id === deckID)].cards = allData;
-		console.log(allData);
+		try {
+			const res = await fetch(`${$api}/getdeckcards`, {
+				method: "POST",
+				body: JSON.stringify({
+					uid: $currentUser.uid,
+					did: deckID,
+				}),
+				headers: {
+					"Content-Type": "application/json",
+				},
+			});
+			const allData = await res.json();
+			$decks[$decks.findIndex((deck) => deck.id === deckID)].cards = allData;
+			console.log(allData);
+		} catch (e) {
+			modalError.set({
+				check: true,
+				msg: e,
+			});
+		}
 	}
 	function selectDeck(id, name) {
 		selectedDeck = {
@@ -139,6 +162,12 @@
 			boardsLoaded.push(false);
 		}
 		console.log(boardsLoaded);
+	}
+	function closeError() {
+		modalError.set({
+			check: false,
+			msg: "",
+		});
 	}
 	getDecks();
 </script>
@@ -218,9 +247,69 @@
 	<NewBoardModal bind:deckID={selectedDeck.id} />
 	<UpdateDeckModal bind:deck={modalDeck} bind:select={selectedDeck} bind:boards={boardsLoaded} />
 	<NewDeckModal />
+
+	<div id="error-modal" class={$modalError.check ? "modal-error" : ""}>
+		<div class="close-box" on:click={closeError}>
+			<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="slategrey">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+			</svg>
+		</div>
+		<h1>Error</h1>
+		<p>Something went wrong. Please refresh the app and try again.</p>
+		<p class="error-e">{$modalError.msg}</p>
+	</div>
+	<div on:click={closeError} class={$modalError.check ? "blackout" : "off"} />
 </main>
 
 <style>
+	#error-modal {
+		position: absolute;
+		display: none;
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -125%);
+	}
+	#error-modal.modal-error {
+		display: block;
+		margin: auto;
+		padding: 16px 32px 48px 32px;
+		border-radius: 16px;
+		border: 1px solid lightgrey;
+		background-color: var(--less-white);
+		z-index: 10;
+	}
+	.error-e {
+		color: red;
+	}
+	#error-modal.modal-error p {
+		margin-top: 32px;
+	}
+	.close-box:hover svg {
+		stroke: black;
+	}
+	.close-box {
+		position: absolute;
+		top: 0px;
+		right: 0px;
+		height: 32px;
+		width: 32px;
+		margin: 8px;
+		cursor: pointer;
+	}
+	.blackout {
+		position: absolute;
+		top: 0px;
+		bottom: 0px;
+		height: 100vh;
+		width: 100vw;
+		display: block;
+		background-color: rgba(0, 0, 0, 0.7);
+		z-index: 9;
+	}
+	.off {
+		display: none;
+	}
 	main {
 		flex-direction: column;
 		display: flex;
@@ -229,6 +318,7 @@
 		height: 100%;
 		position: relative;
 		display: flex;
+		margin-top: 64px;
 	}
 	#all-lists {
 		display: flex;

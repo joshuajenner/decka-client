@@ -11,22 +11,30 @@
 
 	import { listCards } from "../store";
 	import { modalNewCard } from "../store";
+	import { modalError } from "../store";
 
 	export let arr;
 	const flipDurationMs = 200;
 
 	async function updateAllCards() {
-		const res = await fetch(`${$api}/updateallcards`, {
-			method: "POST",
-			body: JSON.stringify({
-				uid: $currentUser.uid,
-				did: $decks[arr].id,
-				cards: $decks[arr].cards,
-			}),
-			headers: {
-				"Content-Type": "application/json",
-			},
-		});
+		try {
+			const res = await fetch(`${$api}/updateallcards`, {
+				method: "POST",
+				body: JSON.stringify({
+					uid: $currentUser.uid,
+					did: $decks[arr].id,
+					cards: $decks[arr].cards,
+				}),
+				headers: {
+					"Content-Type": "application/json",
+				},
+			});
+		} catch (e) {
+			modalError.set({
+				check: true,
+				msg: e,
+			});
+		}
 	}
 
 	function openNewCardModal() {
@@ -84,13 +92,7 @@
 				{/if}
 				<section id="all-cards-dnd" use:dndzone={{ items: $decks[arr].cards, flipDurationMs, transformDraggedElement, type: "cards" }} on:consider={handleSort} on:finalize={finalizeDND}>
 					{#each $decks[arr].cards as item (item.dnd)}
-						<div
-							id={item.id}
-							class="card"
-							in:fly={{ y: -33, duration: 200 }}
-							animate:flip={{ duration: flipDurationMs }}
-							on:click={addToUpdate($decks[arr].id, item.id, item.title, item.content)}
-						>
+						<div id={item.id} class="card" in:fly={{ y: -33, duration: 200 }} animate:flip={{ duration: flipDurationMs }} on:click={addToUpdate($decks[arr].id, item.id, item.title, item.content)}>
 							<div class="card-title">
 								<p class="lato">
 									{item.title}

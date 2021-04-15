@@ -4,6 +4,7 @@
 	import { api } from "../store.js";
 
 	import { modalNewCard } from "../store";
+	import { modalError } from "../store";
 
 	export let deck = "";
 	let formTitle;
@@ -15,33 +16,38 @@
 		formContent = "";
 	}
 	async function newCard() {
-		const res = await fetch(`${$api}/newcard`, {
-			method: "POST",
-			body: JSON.stringify({
-				uid: $currentUser.uid,
-				did: deck.id,
+		try {
+			const res = await fetch(`${$api}/newcard`, {
+				method: "POST",
+				body: JSON.stringify({
+					uid: $currentUser.uid,
+					did: deck.id,
+					title: formTitle,
+					content: formContent,
+					order: 0,
+					dnd: Math.floor(Math.random() * 90000) + 10000,
+				}),
+				headers: {
+					"Content-Type": "application/json",
+				},
+			});
+			const card = await res.json();
+			$decks[deck.arr].cards.push({
+				id: card.id,
 				title: formTitle,
 				content: formContent,
-				order: 0,
 				dnd: Math.floor(Math.random() * 90000) + 10000,
-			}),
-			headers: {
-				"Content-Type": "application/json",
-			},
-		});
-		// $decks[deck.arr].cards.push({
-		// 	id:
-		// })
-		const card = await res.json();
-		$decks[deck.arr].cards.push({
-			id: card.id,
-			title: formTitle,
-			content: formContent,
-			dnd: Math.floor(Math.random() * 90000) + 10000,
-			order: 0,
-		});
-		decks.set($decks);
-		modalNewCard.set(false);
+				order: 0,
+			});
+			decks.set($decks);
+			modalNewCard.set(false);
+		} catch (e) {
+			modalNewCard.set(false);
+			modalError.set({
+				check: true,
+				msg: e,
+			});
+		}
 	}
 </script>
 

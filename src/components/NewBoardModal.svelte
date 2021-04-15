@@ -4,32 +4,41 @@
 	import { api } from "../store.js";
 	import { selectedBoard } from "../store.js";
 	import { modalNewBoard } from "../store";
+	import { modalError } from "../store";
 
 	export let deckID;
 	let formTitle;
 	let formType;
 
 	async function newBoard() {
-		const res = await fetch(`${$api}/newboard`, {
-			method: "POST",
-			body: JSON.stringify({
-				uid: $currentUser.uid,
-				did: deckID,
-				title: formTitle,
-				type: formType,
-			}),
-			headers: {
-				"Content-Type": "application/json",
-			},
-		});
-		const allData = await res.json();
-		$decks[$decks.findIndex((deck) => deck.id === deckID)].boards.push(allData);
-		selectedBoard.set({
-			id: allData.id,
-			i: 0,
-		});
-		decks.set($decks);
-		setClose();
+		try {
+			const res = await fetch(`${$api}/newboard`, {
+				method: "POST",
+				body: JSON.stringify({
+					uid: $currentUser.uid,
+					did: deckID,
+					title: formTitle,
+					type: formType,
+				}),
+				headers: {
+					"Content-Type": "application/json",
+				},
+			});
+			const allData = await res.json();
+			$decks[$decks.findIndex((deck) => deck.id === deckID)].boards.push(allData);
+			selectedBoard.set({
+				id: allData.id,
+				i: 0,
+			});
+			decks.set($decks);
+			setClose();
+		} catch (e) {
+			setClose();
+			modalError.set({
+				check: true,
+				msg: e,
+			});
+		}
 	}
 	function setClose() {
 		modalNewBoard.set(false);

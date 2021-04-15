@@ -7,6 +7,7 @@
 	import { flip } from "svelte/animate";
 	import { dndzone, SHADOW_ITEM_MARKER_PROPERTY_NAME } from "svelte-dnd-action";
 	import { clickOutside } from "../functions/clickOutside.js";
+	import { modalError } from "../store";
 
 	export let boardID;
 	export let boardI;
@@ -17,6 +18,7 @@
 	let cardsLoaded = false;
 
 	let updateModal = false;
+	let modalDay = 0;
 	let modalI = 0;
 	let modalTitle = "";
 	let modalContent = "";
@@ -33,35 +35,34 @@
 	let yearInd = 0;
 	let calGrid = [];
 
-	console.log(monthLength);
 	$decks[deckArr].boards[boardI].years = [{ id: year, months: [] }];
 
 	async function getCalendarCards() {
-		const res = await fetch(`${$api}/getcalendarcards`, {
-			method: "POST",
-			body: JSON.stringify({
-				uid: $currentUser.uid,
-				did: deckID,
-				bid: boardID,
-				year: year,
-				month,
-			}),
-			headers: {
-				"Content-Type": "application/json",
-			},
-		});
-		const cards = await res.json();
-		// let card = 0;
-		// $decks[deckArr].boards[boardI].cards = [];
-		// console.log($decks[deckArr].boards[boardI].cards);
-		// for (card in cards) {
-		// 	$decks[deckArr].boards[boardI].cards.push(cards[card]);
-		// }
-		yearInd = $decks[deckArr].boards[boardI].years.findIndex((y) => y.id === year);
-		$decks[deckArr].boards[boardI].month = cards;
-		constructCalendar();
-		cardsLoaded = true;
-		console.log($decks[deckArr].boards[boardI].month.days);
+		try {
+			const res = await fetch(`${$api}/getcalendarcards`, {
+				method: "POST",
+				body: JSON.stringify({
+					uid: $currentUser.uid,
+					did: deckID,
+					bid: boardID,
+					year: year.toString(),
+					month: month.toString(),
+				}),
+				headers: {
+					"Content-Type": "application/json",
+				},
+			});
+			const cards = await res.json();
+			yearInd = $decks[deckArr].boards[boardI].years.findIndex((y) => y.id === year);
+			$decks[deckArr].boards[boardI].month = cards;
+			constructCalendar();
+			cardsLoaded = true;
+		} catch (e) {
+			modalError.set({
+				check: true,
+				msg: e,
+			});
+		}
 	}
 	function constructCalendar() {
 		let firstDay = new Date(year, month, 1).getDay();
@@ -88,49 +89,59 @@
 				calGrid.push({ month: month + 1, date: m });
 			}
 		}
-		console.log(calGrid);
 	}
 	async function updateCalendarCards(di, dd) {
-		const res = await fetch(`${$api}/updatecalendarcards`, {
-			method: "POST",
-			body: JSON.stringify({
-				uid: $currentUser.uid,
-				did: deckID,
-				bid: boardID,
-				year: year,
-				month: month,
-				day: dd,
-				cards: $decks[deckArr].boards[boardI].month.days[di].cards,
-			}),
-			headers: {
-				"Content-Type": "application/json",
-			},
-		});
+		try {
+			const res = await fetch(`${$api}/updatecalendarcards`, {
+				method: "POST",
+				body: JSON.stringify({
+					uid: $currentUser.uid,
+					did: deckID,
+					bid: boardID,
+					year: year.toString(),
+					month: month.toString(),
+					day: dd.toString(),
+					cards: $decks[deckArr].boards[boardI].month.days[di].cards,
+				}),
+				headers: {
+					"Content-Type": "application/json",
+				},
+			});
+		} catch (e) {
+			modalError.set({
+				check: true,
+				msg: e,
+			});
+		}
 	}
 
 	function deleteCard() {
-		$decks[deckArr].boards[boardI].cards.splice(modalI, 1);
+		$decks[deckArr].boards[boardI].month.days[modalDay].cards.splice(modalI, 1);
 		decks.set($decks);
 		updateModal = false;
-		updateCalendarCards();
+		updateCalendarCards(modalDay, modalDay + 1);
 	}
 	function updateCard() {
-		$decks[deckArr].boards[boardI].cards[modalI].title = modalTitle;
-		$decks[deckArr].boards[boardI].cards[modalI].content = modalContent;
+		console.log($decks[deckArr].boards[boardI].month.days[modalDay], modalI);
+		$decks[deckArr].boards[boardI].month.days[modalDay].cards[modalI].title = modalTitle;
+		$decks[deckArr].boards[boardI].month.days[modalDay].cards[modalI].content = modalContent;
 		updateModal = false;
-		updateCalendarCards();
+		updateCalendarCards(modalDay, modalDay + 1);
 	}
 	function closeModal() {
 		updateModal = false;
 	}
-	function openUpdate(id, title, content) {
+	function openUpdate(md, id, title, content) {
 		updateModal = true;
+		modalDay = md;
 		modalI = id;
 		modalTitle = title;
 		modalContent = content;
 	}
 	function transformDraggedElement(draggedEl, data, index) {
 		draggedEl.style.opacity = 0.7;
+		draggedEl.style.height = "48px";
+		draggedEl.style.overflow = "hidden";
 	}
 	function handleSort(e, di) {
 		$decks[deckArr].boards[boardI].month.days[di].cards = e.detail.items;
@@ -140,7 +151,6 @@
 		decks.set($decks);
 		updateCalendarCards(di, dd);
 	}
-
 	getCalendarCards();
 </script>
 
@@ -166,8 +176,8 @@
 							on:consider={(e) => handleSort(e, day.ind)}
 							on:finalize={(e) => handleFinalize(e, day.ind, day.date)}
 						>
-							{#each $decks[deckArr].boards[boardI].month.days[day.ind].cards as card (card.dnd)}
-								<div on:click={openUpdate(card.title, card.content)} id={card.id} class="card sh" animate:flip={{ duration: flipDurationMs }}>
+							{#each $decks[deckArr].boards[boardI].month.days[day.ind].cards as card, index (card.dnd)}
+								<div on:click={openUpdate(day.ind, index, card.title, card.content)} id={card.id} class="card sh" animate:flip={{ duration: flipDurationMs }}>
 									<div class="card-title lato">
 										<p>{card.title}</p>
 									</div>

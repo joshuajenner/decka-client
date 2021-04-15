@@ -4,6 +4,7 @@
 	import { api } from "../store.js";
 
 	import { modalNewDeck } from "../store";
+	import { modalError } from "../store";
 
 	let formTitle = "";
 
@@ -12,26 +13,34 @@
 	}
 
 	async function newDeck() {
-		const res = await fetch(`${$api}/newdeck`, {
-			method: "POST",
-			body: JSON.stringify({
-				uid: $currentUser.uid,
-				title: formTitle,
-			}),
-			headers: {
-				"Content-Type": "application/json",
-			},
-		});
-		const deck = await res.json();
-		$decks.push({
-			data: { title: formTitle },
-			id: deck.id,
-			cards: [],
-			boards: [],
-		});
-		decks.set($decks);
-		console.log($decks);
-		modalNewDeck.set(false);
+		try {
+			const res = await fetch(`${$api}/newdeck`, {
+				method: "POST",
+				body: JSON.stringify({
+					uid: $currentUser.uid,
+					title: formTitle,
+				}),
+				headers: {
+					"Content-Type": "application/json",
+				},
+			});
+			const deck = await res.json();
+			$decks.push({
+				data: { title: formTitle },
+				id: deck.id,
+				cards: [],
+				boards: [],
+			});
+			decks.set($decks);
+			console.log($decks);
+			modalNewDeck.set(false);
+		} catch (e) {
+			modalNewDeck.set(false);
+			modalError.set({
+				check: true,
+				msg: e,
+			});
+		}
 	}
 </script>
 

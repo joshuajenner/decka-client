@@ -4,6 +4,7 @@
 	import { api } from "../store.js";
 
 	import { modalUpdateDeck } from "../store.js";
+	import { modalError } from "../store";
 
 	// id, title, content
 	export let deck = {};
@@ -18,50 +19,65 @@
 	}
 
 	async function updateDeck() {
-		const res = await fetch(`${$api}/updatedeck`, {
-			method: "POST",
-			body: JSON.stringify({
-				uid: $currentUser.uid,
-				did: deck.id,
-				title: formTitle,
-			}),
-			headers: {
-				"Content-Type": "application/json",
-			},
-		});
-		modalUpdateDeck.set(false);
-	}
-
-	async function deleteDeck() {
-		if (confirm === deck.title) {
-			console.log(boards);
-			const res = await fetch(`${$api}/deletedeck`, {
+		try {
+			const res = await fetch(`${$api}/updatedeck`, {
 				method: "POST",
 				body: JSON.stringify({
 					uid: $currentUser.uid,
 					did: deck.id,
+					title: formTitle,
 				}),
 				headers: {
 					"Content-Type": "application/json",
 				},
 			});
-			if (select.arr == $decks.findIndex((d) => d.id === deck.id)) {
-				select = {
-					arr: -1,
-					title: "",
-					id: "",
-				};
-			}
-			boards.splice(
-				$decks.findIndex((d) => d.id === deck.id),
-				1
-			);
-			$decks.splice(
-				$decks.findIndex((d) => d.id === deck.id),
-				1
-			);
-			decks.set($decks);
 			modalUpdateDeck.set(false);
+		} catch (e) {
+			modalUpdateDeck.set(false);
+			modalError.set({
+				check: true,
+				msg: e,
+			});
+		}
+	}
+
+	async function deleteDeck() {
+		if (confirm === deck.title) {
+			try {
+				const res = await fetch(`${$api}/deletedeck`, {
+					method: "POST",
+					body: JSON.stringify({
+						uid: $currentUser.uid,
+						did: deck.id,
+					}),
+					headers: {
+						"Content-Type": "application/json",
+					},
+				});
+				if (select.arr == $decks.findIndex((d) => d.id === deck.id)) {
+					select = {
+						arr: -1,
+						title: "",
+						id: "",
+					};
+				}
+				boards.splice(
+					$decks.findIndex((d) => d.id === deck.id),
+					1
+				);
+				$decks.splice(
+					$decks.findIndex((d) => d.id === deck.id),
+					1
+				);
+				decks.set($decks);
+				modalUpdateDeck.set(false);
+			} catch (e) {
+				modalUpdateDeck.set(false);
+				modalError.set({
+					check: true,
+					msg: e,
+				});
+			}
 		}
 	}
 </script>
