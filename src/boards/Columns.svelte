@@ -427,7 +427,7 @@
 	}
 	.button-delete {
 		position: absolute;
-		bottom: -11px;
+		bottom: 14px;
 		right: 96px;
 	}
 	/* .custom-shadow-item {
