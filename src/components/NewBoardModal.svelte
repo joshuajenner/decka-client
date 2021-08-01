@@ -64,10 +64,10 @@
 				<input type="radio" bind:group={formType} value={2} />
 				Free
 			</label>
-			<label>
+			<!-- <label>
 				<input type="radio" bind:group={formType} value={3} />
 				Calendar
-			</label>
+			</label> -->
 			<button type="submit">Submit</button>
 		</form>
 		<div id="close-box" on:click={setClose}>
