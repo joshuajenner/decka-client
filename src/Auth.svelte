@@ -22,11 +22,10 @@
 						name: res[0],
 						user: u,
 					});
-					console.log($currentUser.user);
 				})
 				.catch((error) => {
 					var errorCode = error.code;
-					console.log(error);
+					// console.log(error);
 					if (errorCode === "auth/wrong-password") {
 						errorMessage = "The password is incorrect.";
 					} else if (errorCode === "auth/invalid-email") {

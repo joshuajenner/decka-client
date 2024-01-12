@@ -53,7 +53,6 @@
 			});
 
 			const allDecks = await res.json();
-			console.log(allDecks);
 			setBoardsStatus(allDecks.length);
 			$decks = allDecks;
 		} catch (e) {
@@ -161,7 +160,6 @@
 		for (let i = 0; i < l; i++) {
 			boardsLoaded.push(false);
 		}
-		console.log(boardsLoaded);
 	}
 	function closeError() {
 		modalError.set({

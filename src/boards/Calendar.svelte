@@ -122,7 +122,7 @@
 		updateCalendarCards(modalDay, modalDay + 1);
 	}
 	function updateCard() {
-		console.log($decks[deckArr].boards[boardI].month.days[modalDay], modalI);
+		// console.log($decks[deckArr].boards[boardI].month.days[modalDay], modalI);
 		$decks[deckArr].boards[boardI].month.days[modalDay].cards[modalI].title = modalTitle;
 		$decks[deckArr].boards[boardI].month.days[modalDay].cards[modalI].content = modalContent;
 		updateModal = false;

@@ -38,7 +38,7 @@
 			const cards = await res.json();
 			let card = 0;
 			$decks[deckArr].boards[boardI].cards = [];
-			console.log($decks[deckArr].boards[boardI].cards);
+			// console.log($decks[deckArr].boards[boardI].cards);
 			for (card in cards) {
 				$decks[deckArr].boards[boardI].cards.push(cards[card]);
 			}

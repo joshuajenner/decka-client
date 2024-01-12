@@ -32,7 +32,7 @@
 				boards: [],
 			});
 			decks.set($decks);
-			console.log($decks);
+			// console.log($decks);
 			modalNewDeck.set(false);
 		} catch (e) {
 			modalNewDeck.set(false);

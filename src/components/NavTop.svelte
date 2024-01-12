@@ -53,7 +53,7 @@
 		modalNewBoard.set(true);
 	}
 	function selectBoard(b) {
-		console.log(b);
+		// console.log(b);
 		selectedBoard.set(b);
 	}
 	function openMenu() {
@@ -89,7 +89,7 @@
 			let u = $currentUser.user;
 			u.delete()
 				.then(function () {
-					console.log("User Deleted");
+					// console.log("User Deleted");
 				})
 				.catch(function (error) {
 					modalError.set({

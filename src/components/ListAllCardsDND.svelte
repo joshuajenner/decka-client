@@ -10,7 +10,7 @@
 	];
 
 	function handleSort(e) {
-		console.log(e);
+		// console.log(e);
 		items = e.detail.items;
 	}
 </script>

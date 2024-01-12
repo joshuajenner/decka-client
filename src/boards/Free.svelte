@@ -133,7 +133,7 @@
 	}
 	function handleDragStart(i) {
 		dragCardI = i;
-		console.log(dragCardI);
+		// console.log(dragCardI);
 	}
 	function handleSort(e) {
 		$decks[deckArr].boards[boardI].cards = e.detail.items;

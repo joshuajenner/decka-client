@@ -48,12 +48,12 @@
 			content: content,
 		});
 		updateCards.set($updateCards);
-		console.log($updateCards);
+		// console.log($updateCards);
 	}
 
 	function handleSort(e) {
 		$decks[arr].cards = e.detail.items;
-		console.log(e);
+		// console.log(e);
 	}
 	function finalizeDND(e) {
 		$decks[arr].cards = e.detail.items;

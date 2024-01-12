@@ -99,7 +99,7 @@
 	function openInput() {
 		input.focus();
 		enterList = true;
-		console.log(columnsLoaded);
+		// console.log(columnsLoaded);
 	}
 	function closeInput() {
 		enterList = false;
